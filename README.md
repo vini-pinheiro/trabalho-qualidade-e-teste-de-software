@@ -1,4 +1,8 @@
-# APS-04-Lanchonete-Online-em-Java
+# Trabalho da matéria de Qualidade e Teste de Software baseado no projeto APS-04-Lanchonete-Online-em-Java
+
+## Documentos
+- [Plano de Testes](https://docs.google.com/document/d/1MT2I238OlATRWofvbea8ut1F0oSDA92Siztl87TmjpI/edit?usp=drive_link)
+- [Casos de Testes](https://docs.google.com/document/d/1mvKbYUuk7sZEFDQK1972yOiuNHJiZ4uonLA_VkpjhHU/edit?usp=drive_link)
 
 ## Sobre
 Com o objetivo de desenvolver a capacidade dos alunos e obter nota na disciplina APS (Atividades Práticas Supervisionadas), 
