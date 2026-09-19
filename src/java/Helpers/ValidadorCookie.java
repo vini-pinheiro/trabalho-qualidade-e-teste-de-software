@@ -17,7 +17,7 @@ import javax.servlet.http.Cookie;
 public class ValidadorCookie {
     private DaoToken tokenDAO;
 
-    public void validadorCookie(DaoToken tokenDAO) {
+    public ValidadorCookie(DaoToken tokenDAO) {
         this.tokenDAO = tokenDAO;
     }
     
