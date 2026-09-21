@@ -176,7 +176,7 @@ const CASOS_ANEXO = [
   {
     ct: "CT-01", area: "Autenticação e sessão", quem: "Yuri Mascarenhas", data: "21/09", passou: 8, falhou: 0,
     caso: "caso-01.png", tela: "tela-01.png",
-    legendaTela: "Sessão ativa: nome e endereço carregados a partir do cookie de login",
+    legendaTela: "Página restrita sem sessão: o sistema devolve ao login com o aviso",
     resultado: "Todos os passos passaram. Fica a observação: o token não expira no servidor.",
     issues: "Caso: #6",
   },
