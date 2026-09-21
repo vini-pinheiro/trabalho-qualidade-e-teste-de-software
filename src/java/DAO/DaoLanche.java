@@ -24,6 +24,14 @@ public class DaoLanche {
     public DaoLanche() {
         this.conecta = new DaoUtil().conecta();
     }
+
+    /**
+     * Construtor com o intuito de facilitar os testes unitários sem depender de um banco de dados real em execução
+     * @author Vinicius Fonseca
+     * */
+    public DaoLanche(Connection conecta) {
+        this.conecta = conecta;
+    }
     
     public void salvar(Lanche lanche){
         String sql = "INSERT INTO tb_lanches(nm_lanche, descricao, valor_venda, fg_ativo) "

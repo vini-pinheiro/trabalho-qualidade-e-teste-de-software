@@ -15,7 +15,12 @@ import javax.servlet.http.Cookie;
  * @author kener_000
  */
 public class ValidadorCookie {
-    private DaoToken tokenDAO;
+    private final DaoToken tokenDAO;
+
+    // Add this default constructor for the controllers:
+    public ValidadorCookie() {
+        this(new DaoToken());
+    }
 
     public ValidadorCookie(DaoToken tokenDAO) {
         this.tokenDAO = tokenDAO;
@@ -24,12 +29,12 @@ public class ValidadorCookie {
     public boolean validar(Cookie[] cookies){
         
         boolean resultado = false;
-        
-        for (int i = 0; i < cookies.length; i++) {
-            String name = cookies[i].getName();
-            String value = cookies[i].getValue();
-            
-            if(name.equals("token")){
+
+        for (Cookie cookie : cookies) {
+            String name = cookie.getName();
+            String value = cookie.getValue();
+
+            if (name.equals("token")) {
                 resultado = tokenDAO.validar(value);
             }
         }
