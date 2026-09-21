@@ -1,20 +1,19 @@
 package DAO;
 
 import Model.Cliente;
-import Helpers.EncryptadorMD5;
+import Model.Endereco;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.objenesis.Objenesis;
-import org.objenesis.ObjenesisStd;
 
-
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -23,159 +22,268 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class DaoClienteTest {
 
-    // 1. Criamos os "atores falsos" do JDBC
-    @Mock
-    private Connection Falseconnection;
+    // Hashes conhecidos, para não depender do EncryptadorMD5 ao montar o resultado esperado
+    private static final String MD5_DE_123456 = "e10adc3949ba59abbe56e057f20f883e";
 
     @Mock
-    private PreparedStatement Falsestatement;
+    private Connection conexao;
 
     @Mock
-    private ResultSet FalseresultSet;
+    private PreparedStatement comando;
+
+    @Mock
+    private ResultSet resultado;
+
+    @Mock
+    private DaoEndereco enderecoDao;
 
     private DaoCliente dao;
 
     @BeforeEach
-    void setUp() throws Exception {
-        // Criamos a instância normalmente (pode dar erro de conexão aqui se o banco estiver desligado,
-        // por isso substituímos o campo 'conecta' imediatamente via Reflection)
-        Objenesis objenesis = new ObjenesisStd();
-
-
-        dao = objenesis.newInstance(DaoCliente.class);
-
-        // Injeta a Falseconnection diretamente dentro do campo privado "conecta" do DaoCliente
-        Field campoConecta = DaoCliente.class.getDeclaredField("conecta");
-        campoConecta.setAccessible(true);
-        campoConecta.set(dao, Falseconnection);
+    void setUp() {
+        dao = new DaoCliente(conexao, enderecoDao);
     }
 
-    // Método utilitário simples para instanciar a classe sem executar o "new DaoUtil().conecta()"
-    /*private Object allocateInstanceWithoutConstructor(Class<?> clazz) throws Exception {
-        sun.misc.Unsafe unsafe;
-        Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-        f.setAccessible(true);
-        unsafe = (sun.misc.Unsafe) f.get(null);
-        return unsafe.allocateInstance(clazz);
-    }*/
+    private void bancoRespondeUmaLinha() throws SQLException {
+        when(conexao.prepareStatement(anyString())).thenReturn(comando);
+        when(comando.executeQuery()).thenReturn(resultado);
+        when(resultado.next()).thenReturn(true, false);
+    }
+
+    private void bancoRespondeClienteDoLogin(String usuario, String hashSenha, int ativo) throws SQLException {
+        bancoRespondeUmaLinha();
+        when(resultado.getString("usuario")).thenReturn(usuario);
+        when(resultado.getString("senha")).thenReturn(hashSenha);
+        when(resultado.getInt("fg_ativo")).thenReturn(ativo);
+    }
+
+    private Cliente tentativaDeLogin(String usuario, String senha) {
+        Cliente cliente = new Cliente();
+        cliente.setUsuario(usuario);
+        cliente.setSenha(senha);
+        return cliente;
+    }
+
+    // ---------- login ----------
 
     @Test
     void testeLoginComSucesso() throws Exception {
-        // PASSO 1: DADOS FICTÍCIOS DE ENTRADA (O que o usuário digitaria na tela)
-        Cliente clienteTentandoLogar = new Cliente();
-        clienteTentandoLogar.setUsuario("admin");
-        clienteTentandoLogar.setSenha("123456");
+        bancoRespondeClienteDoLogin("admin", MD5_DE_123456, 1);
 
-        // PASSO 2: ENSINAR O BANCO FALSO A RESPONDER (Quando o Java perguntar ao Mockito)
-        // Quando pedir para preparar a SQL, devolva o statement falso:
-        when(Falseconnection.prepareStatement(anyString())).thenReturn(Falsestatement);
-        // Quando executar a SQL, devolva o resultado falso:
-        when(Falsestatement.executeQuery()).thenReturn(FalseresultSet);
+        boolean logou = dao.login(tentativaDeLogin("admin", "123456"));
 
-        // Fingimos que o banco achou 1 linha (primeiro next() é true, o próximo é false para sair do loop)
-        when(FalseresultSet.next()).thenReturn(true, false);
-        // Fingimos os dados que o banco retornaria para essa linha:
-        when(FalseresultSet.getString("usuario")).thenReturn("admin");
-        when(FalseresultSet.getString("senha")).thenReturn(new EncryptadorMD5().encryptar("123456"));
-        when(FalseresultSet.getInt("fg_ativo")).thenReturn(1);
-
-        // PASSO 3: EXECUTAR O MÉTODO REAL
-        boolean logou = dao.login(clienteTentandoLogar);
-
-        // PASSO 4: CONFERIR SE DEU CERTO
         assertTrue(logou, "O login deveria ser aprovado com usuário e senha corretos");
+        verify(comando).setString(1, "admin");
     }
 
     @Test
     void testeLoginSenhaIncorreta() throws Exception {
-        // PASSO 1: DADOS FICTÍCIOS (Senha errada digitada)
-        Cliente clienteTentandoLogar = new Cliente();
-        clienteTentandoLogar.setUsuario("admin");
-        clienteTentandoLogar.setSenha("senha_errada");
+        bancoRespondeClienteDoLogin("admin", MD5_DE_123456, 1);
 
-        // PASSO 2: O banco finge que a senha guardada lá dentro é a do "123456"
-        when(Falseconnection.prepareStatement(anyString())).thenReturn(Falsestatement);
-        when(Falsestatement.executeQuery()).thenReturn(FalseresultSet);
+        boolean logou = dao.login(tentativaDeLogin("admin", "senha_errada"));
 
-        when(FalseresultSet.next()).thenReturn(true, false);
-        when(FalseresultSet.getString("usuario")).thenReturn("admin");
-        when(FalseresultSet.getString("senha")).thenReturn(new EncryptadorMD5().encryptar("123456"));
-        when(FalseresultSet.getInt("fg_ativo")).thenReturn(1);
-
-        // PASSO 3: EXECUTAR
-        boolean logou = dao.login(clienteTentandoLogar);
-
-        // PASSO 4: CONFERIR (Deve ser falso!)
         assertFalse(logou, "O login não deve ser permitido com senha errada");
     }
 
     @Test
+    @DisplayName("Cliente inativo não entra, mesmo com a senha correta")
+    void deveRecusarClienteInativo() throws Exception {
+        bancoRespondeClienteDoLogin("carlos.silva", MD5_DE_123456, 0);
+
+        assertFalse(dao.login(tentativaDeLogin("carlos.silva", "123456")));
+    }
+
+    @Test
+    @DisplayName("Usuário inexistente não entra")
+    void deveRecusarUsuarioInexistente() throws Exception {
+        when(conexao.prepareStatement(anyString())).thenReturn(comando);
+        when(comando.executeQuery()).thenReturn(resultado);
+        when(resultado.next()).thenReturn(false);
+
+        assertFalse(dao.login(tentativaDeLogin("ninguem", "123456")));
+    }
+
+    @Test
+    @DisplayName("A comparação da senha diferencia maiúsculas de minúsculas")
+    void deveDiferenciarMaiusculasNaSenha() throws Exception {
+        bancoRespondeClienteDoLogin("admin", "0cc175b9c0f1b6a831c399e269772661", 1); // MD5 de "a"
+
+        assertFalse(dao.login(tentativaDeLogin("admin", "A")));
+    }
+
+    @Test
+    @DisplayName("Senha em texto puro gravada no banco não autentica")
+    void deveRecusarQuandoBancoGuardaSenhaSemHash() throws Exception {
+        bancoRespondeClienteDoLogin("admin", "123456", 1);
+
+        assertFalse(dao.login(tentativaDeLogin("admin", "123456")));
+    }
+
+    @Test
+    @DisplayName("Falha de SQL no login é tratada como acesso negado")
+    void deveNegarLoginQuandoBancoFalha() throws Exception {
+        when(conexao.prepareStatement(anyString())).thenThrow(new SQLException("banco fora do ar"));
+
+        assertFalse(dao.login(tentativaDeLogin("admin", "123456")));
+    }
+
+    @Test
+    @DisplayName("Login sem senha (null) lança NullPointerException")
+    void caracterizacaoLoginComSenhaNula() throws Exception {
+        bancoRespondeClienteDoLogin("admin", MD5_DE_123456, 1);
+
+        assertThrows(NullPointerException.class, () -> dao.login(tentativaDeLogin("admin", null)));
+    }
+
+    // ---------- salvar ----------
+
+    private Cliente clienteParaCadastro() {
+        Endereco endereco = new Endereco();
+        endereco.setRua("Rua XV de Novembro");
+        endereco.setNumero(100);
+        endereco.setBairro("Centro");
+        endereco.setCidade("Curitiba");
+        endereco.setEstado("PR");
+
+        Cliente cliente = new Cliente();
+        cliente.setNome("Ana");
+        cliente.setSobrenome("D'Ávila");
+        cliente.setTelefone("41999990000");
+        cliente.setUsuario("ana.davila");
+        cliente.setSenha("123456");
+        cliente.setFg_ativo(1);
+        cliente.setEndereco(endereco);
+        return cliente;
+    }
+
+    @Test
+    @DisplayName("Cadastro com endereço novo grava o endereço antes e usa o id gerado")
+    void deveGravarEnderecoNovoAntesDoCliente() throws Exception {
+        Cliente cliente = clienteParaCadastro();
+        when(conexao.prepareStatement(anyString())).thenReturn(comando);
+        when(enderecoDao.validaEndereco(cliente.getEndereco())).thenReturn(0, 12);
+
+        dao.salvar(cliente);
+
+        verify(enderecoDao).salvar(cliente.getEndereco());
+        verify(comando).setInt(7, 12);
+        verify(comando).execute();
+    }
+
+    @Test
+    @DisplayName("Cadastro com endereço já existente reaproveita o id e não duplica o endereço")
+    void deveReaproveitarEnderecoExistente() throws Exception {
+        Cliente cliente = clienteParaCadastro();
+        when(conexao.prepareStatement(anyString())).thenReturn(comando);
+        when(enderecoDao.validaEndereco(cliente.getEndereco())).thenReturn(7);
+
+        dao.salvar(cliente);
+
+        verify(enderecoDao, never()).salvar(any());
+        verify(comando).setInt(7, 7);
+    }
+
+    @Test
+    @DisplayName("A senha vai em texto para o banco, que aplica MD5 no próprio INSERT")
+    void deveDelegarHashDaSenhaAoBanco() throws Exception {
+        Cliente cliente = clienteParaCadastro();
+        when(conexao.prepareStatement(anyString())).thenReturn(comando);
+        when(enderecoDao.validaEndereco(any())).thenReturn(7);
+
+        dao.salvar(cliente);
+
+        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        verify(conexao).prepareStatement(sql.capture());
+        assertTrue(sql.getValue().contains("MD5(?)"));
+        verify(comando).setString(2, "D'Ávila");
+        verify(comando).setString(5, "123456");
+        verify(comando).setInt(6, 1);
+    }
+
+    @Test
+    @DisplayName("Falha ao gravar o cliente vira RuntimeException")
+    void deveRepassarFalhaAoSalvar() throws Exception {
+        when(conexao.prepareStatement(anyString())).thenThrow(new SQLException("violação de NOT NULL"));
+
+        assertThrows(RuntimeException.class, () -> dao.salvar(clienteParaCadastro()));
+    }
+
+    // ---------- consultas ----------
+
+    @Test
     void testePesquisaPorUsuarioComSucesso() throws Exception {
-        // PASSO 1: DADOS FICTÍCIOS DE ENTRADA
         Cliente parametroPesquisa = new Cliente();
         parametroPesquisa.setUsuario("carlos.silva");
 
-        // PASSO 2: ENSINAR O BANCO FALSO A RESPONDER
-        when(Falseconnection.prepareStatement(anyString())).thenReturn(Falsestatement);
-        when(Falsestatement.executeQuery()).thenReturn(FalseresultSet);
+        bancoRespondeUmaLinha();
+        when(resultado.getInt("id_cliente")).thenReturn(15);
+        when(resultado.getString("nome")).thenReturn("Carlos");
+        when(resultado.getString("sobrenome")).thenReturn("Silva");
+        when(resultado.getString("telefone")).thenReturn("988887777");
+        when(resultado.getString("usuario")).thenReturn("carlos.silva");
+        when(resultado.getString("senha")).thenReturn("hash123");
 
-        // O ResultSet encontra 1 registo e depois termina
-        when(FalseresultSet.next()).thenReturn(true, false);
-        when(FalseresultSet.getInt("id_cliente")).thenReturn(15);
-        when(FalseresultSet.getString("nome")).thenReturn("Carlos");
-        when(FalseresultSet.getString("sobrenome")).thenReturn("Silva");
-        when(FalseresultSet.getString("telefone")).thenReturn("988887777");
-        when(FalseresultSet.getString("usuario")).thenReturn("carlos.silva");
-        when(FalseresultSet.getString("senha")).thenReturn("hash123");
+        Cliente encontrado = dao.pesquisaPorUsuario(parametroPesquisa);
 
-        // PASSO 3: EXECUTAR O MÉTODO
-        Cliente resultado = dao.pesquisaPorUsuario(parametroPesquisa);
+        assertNotNull(encontrado, "O cliente retornado não deve ser nulo");
+        assertEquals(15, encontrado.getId_cliente());
+        assertEquals("Carlos", encontrado.getNome());
+        assertEquals("Silva", encontrado.getSobrenome());
+        assertEquals("carlos.silva", encontrado.getUsuario());
+        assertEquals(1, encontrado.getFg_ativo());
+    }
 
-        // PASSO 4: VALIDAÇÕES
-        assertNotNull(resultado, "O cliente retornado não deve ser nulo");
-        assertEquals(15, resultado.getId_cliente());
-        assertEquals("Carlos", resultado.getNome());
-        assertEquals("Silva", resultado.getSobrenome());
-        assertEquals("carlos.silva", resultado.getUsuario());
-        assertEquals(1, resultado.getFg_ativo());
+    @Test
+    @DisplayName("pesquisaPorUsuario concatena o usuário no SQL: apóstrofo quebra o comando")
+    void caracterizacaoPesquisaPorUsuarioConcatenaSql() throws Exception {
+        Cliente parametroPesquisa = new Cliente();
+        parametroPesquisa.setUsuario("o'brien");
+        bancoRespondeUmaLinha();
+
+        dao.pesquisaPorUsuario(parametroPesquisa);
+
+        // No PostgreSQL esse comando é inválido: o login de um usuário com apóstrofo quebra (DEF-04)
+        verify(conexao).prepareStatement("SELECT * FROM tb_clientes WHERE usuario='o'brien'");
     }
 
     @Test
     void testePesquisaPorIDComSucesso() throws Exception {
-        // PASSO 1: ENSINAR O BANCO FALSO A RESPONDER
-        when(Falseconnection.prepareStatement(anyString())).thenReturn(Falsestatement);
-        when(Falsestatement.executeQuery()).thenReturn(FalseresultSet);
+        bancoRespondeUmaLinha();
+        when(resultado.getInt("id_cliente")).thenReturn(42);
+        when(resultado.getString("nome")).thenReturn("Ana");
+        when(resultado.getString("sobrenome")).thenReturn("Souza");
+        when(resultado.getString("telefone")).thenReturn("911112222");
 
-        when(FalseresultSet.next()).thenReturn(true, false);
-        when(FalseresultSet.getInt("id_cliente")).thenReturn(42);
-        when(FalseresultSet.getString("nome")).thenReturn("Ana");
-        when(FalseresultSet.getString("sobrenome")).thenReturn("Souza");
-        when(FalseresultSet.getString("telefone")).thenReturn("911112222");
+        Cliente encontrado = dao.pesquisaPorID("42");
 
-        // PASSO 2: EXECUTAR PASSANDO O ID COMO STRING
-        Cliente resultado = dao.pesquisaPorID("42");
-
-        // PASSO 3: VALIDAÇÕES
-        assertNotNull(resultado);
-        assertEquals(42, resultado.getId_cliente());
-        assertEquals("Ana", resultado.getNome());
-        assertEquals("Souza", resultado.getSobrenome());
-        assertEquals("911112222", resultado.getTelefone());
-        assertEquals(1, resultado.getFg_ativo());
+        assertNotNull(encontrado);
+        assertEquals(42, encontrado.getId_cliente());
+        assertEquals("Ana", encontrado.getNome());
+        assertEquals("Souza", encontrado.getSobrenome());
+        assertEquals("911112222", encontrado.getTelefone());
+        assertEquals(1, encontrado.getFg_ativo());
     }
 
     @Test
     void testePesquisaPorIDNaoEncontrado() throws Exception {
-        // Simula o caso em que o ID pesquisado não existe na base de dados (next() retorna false logo de início)
-        when(Falseconnection.prepareStatement(anyString())).thenReturn(Falsestatement);
-        when(Falsestatement.executeQuery()).thenReturn(FalseresultSet);
-        when(FalseresultSet.next()).thenReturn(false);
+        when(conexao.prepareStatement(anyString())).thenReturn(comando);
+        when(comando.executeQuery()).thenReturn(resultado);
+        when(resultado.next()).thenReturn(false);
 
-        Cliente resultado = dao.pesquisaPorID("999");
+        Cliente encontrado = dao.pesquisaPorID("999");
 
-        // O método instancia um new Cliente() vazio caso não entre no while
-        assertNotNull(resultado);
-        assertEquals(0, resultado.getId_cliente());
-        assertNull(resultado.getNome());
+        // Sem linhas, o DAO devolve um Cliente vazio em vez de null
+        assertNotNull(encontrado);
+        assertEquals(0, encontrado.getId_cliente());
+        assertNull(encontrado.getNome());
+    }
+
+    @Test
+    @DisplayName("Falha de SQL nas consultas vira RuntimeException")
+    void deveRepassarFalhaNasConsultas() throws Exception {
+        when(conexao.prepareStatement(anyString())).thenThrow(new SQLException("banco fora do ar"));
+
+        assertThrows(RuntimeException.class, () -> dao.pesquisaPorID("1"));
+        assertThrows(RuntimeException.class, () -> dao.listarTodos());
     }
 }

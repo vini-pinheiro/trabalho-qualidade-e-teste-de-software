@@ -23,6 +23,11 @@ public class DaoPedido {
     public DaoPedido() {
         this.conecta = new DaoUtil().conecta();
     }
+
+    // Permite testar o DAO com uma conexão controlada, sem depender do DaoUtil
+    public DaoPedido(Connection conecta) {
+        this.conecta = conecta;
+    }
     
     public void salvar(Pedido pedido){
         String sql = "INSERT INTO tb_pedidos(id_cliente, data_pedido, valor_total) "

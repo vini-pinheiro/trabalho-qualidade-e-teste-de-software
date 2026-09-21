@@ -27,6 +27,19 @@ import org.json.JSONObject;
  */
 public class alterarIngrediente extends HttpServlet {
 
+    // Nulos no uso normal (Tomcat): as dependências continuam sendo criadas a cada requisição
+    private ValidadorCookie validadorCookie;
+    private DaoIngrediente ingredienteDaoInjetado;
+
+    public alterarIngrediente() {
+    }
+
+    // Usado nos testes para isolar cookie e banco
+    public alterarIngrediente(ValidadorCookie validadorCookie, DaoIngrediente ingredienteDao) {
+        this.validadorCookie = validadorCookie;
+        this.ingredienteDaoInjetado = ingredienteDao;
+    }
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -49,7 +62,7 @@ public class alterarIngrediente extends HttpServlet {
         
         try{
         Cookie[] cookies = request.getCookies();
-        ValidadorCookie validar = new ValidadorCookie();
+        ValidadorCookie validar = (validadorCookie != null) ? validadorCookie : new ValidadorCookie();
         
         resultado = validar.validarFuncionario(cookies);
         }catch(java.lang.NullPointerException e){}
@@ -71,7 +84,7 @@ public class alterarIngrediente extends HttpServlet {
             ingrediente.setTipo(dados.getString("tipo"));
             ingrediente.setFg_ativo(1);
             
-            DaoIngrediente ingredienteDAO = new DaoIngrediente();
+            DaoIngrediente ingredienteDAO = (ingredienteDaoInjetado != null) ? ingredienteDaoInjetado : new DaoIngrediente();
             ingredienteDAO.alterar(ingrediente);
             
             try (PrintWriter out = response.getWriter()) {

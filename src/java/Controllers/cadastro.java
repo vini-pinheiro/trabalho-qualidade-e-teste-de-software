@@ -29,6 +29,17 @@ import org.json.JSONObject;
 @WebServlet(name = "cadastro", urlPatterns = {"/cadastro"})
 public class cadastro extends HttpServlet {
 
+    // Nulo no uso normal (Tomcat): o DaoCliente continua sendo criado a cada requisição
+    private DaoCliente clienteDaoInjetado;
+
+    public cadastro() {
+    }
+
+    // Usado nos testes para isolar o banco
+    public cadastro(DaoCliente clienteDao) {
+        this.clienteDaoInjetado = clienteDao;
+    }
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -80,7 +91,7 @@ public class cadastro extends HttpServlet {
             //E Para finalizar, salva no Banco usando o DAO deles
             cliente.setEndereco(endereco);
             
-            DaoCliente clienteDAO = new DaoCliente();
+            DaoCliente clienteDAO = (clienteDaoInjetado != null) ? clienteDaoInjetado : new DaoCliente();
             clienteDAO.salvar(cliente);
             
         }
