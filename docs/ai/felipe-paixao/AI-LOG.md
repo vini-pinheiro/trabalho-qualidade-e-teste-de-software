@@ -22,6 +22,10 @@
 
 ## Observações
 
+- **Alcance:** a ampliação da suíte não ficou restrita ao módulo de estoque. A ferramenta foi operada por mim nas
+  cinco áreas, gerando também `ValidadorCookieLimitesTest`, `ComprarRegrasTest`, `CadastroTest`, `EncryptadorMD5Test`
+  e `SalvarLancheClienteTest`, além da simplificação do `DaoClienteTest`. Os testes originais de cada área continuam
+  sendo os que cada integrante commitou entre 19 e 21/09, e cada um mantém o seu próprio registro em `docs/ai/`.
 - A execução dos casos de teste manuais (CT-01 a CT-05) foi feita pelos integrantes na aplicação em execução, com os
   prints anexados a cada documento. Cinco defeitos apareceram somente nessa etapa e não haviam sido detectados pelos
   testes automatizados, entre eles o erro HTTP 500 ao finalizar uma compra com bebida no carrinho.
