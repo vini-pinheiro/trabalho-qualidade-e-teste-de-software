@@ -186,4 +186,96 @@ AREAS.forEach((a) => {
   s.addNotes("Fechando.\n[PAUSA]\n115 testes rodando, todos passando.\n[PAUSA]\nMais cinco testes que ficam vermelhos de propósito.\nEles descrevem como deveria funcionar,\ne falham enquanto o defeito existir.\n[PAUSA]\nE onze defeitos no total: seis já viraram issue, da vinte até a vinte e cinco.\n[PAUSA]\nO que ficou faltando, e a gente não vai esconder:\ncinco achados dos testes manuais ainda não viraram issue.\nE a área de estoque ficou sem classe de regra de negócio,\ncomo eu mostrei ali atrás.\nE a gente não corrigiu nenhum defeito,\nporque o objetivo dessa entrega era encontrar e registrar.\n[PAUSA]\nUma última coisa, porque é fácil confundir:\ncobertura alta não quer dizer que não tem defeito.\nQuer dizer só que aquele trecho foi executado.\n[PAUSA]\nTanto é que a gente tem cobertura alta e seis defeitos.\n[PAUSA]\nÉ isso. Obrigado, e a gente está aberto pra perguntas.");
 }
 
+// ---- Anexos: evidencias do que foi feito ----
+const fs = require("fs");
+const PASTA_ANEXOS = path.join(__dirname, "anexos");
+
+// Le largura e altura direto do cabecalho do PNG, para nao distorcer a imagem
+function tamanhoPng(caminho) {
+  const bytes = fs.readFileSync(caminho);
+  return { largura: bytes.readUInt32BE(16), altura: bytes.readUInt32BE(20) };
+}
+
+function imagem(slide, arquivo, x, y, larguraDesejada) {
+  const caminho = path.join(PASTA_ANEXOS, arquivo);
+  const { largura, altura } = tamanhoPng(caminho);
+  const h = (larguraDesejada * altura) / largura;
+  slide.addImage({ path: caminho, x, y, w: larguraDesejada, h });
+  return y + h;
+}
+
+function cabecalhoAnexo(slide, titulo, subtitulo) {
+  slide.background = { color: COR.branco };
+  texto(slide, "ANEXO", { x: 0.5, y: 0.32, w: 3, h: 0.24, fontSize: 10, bold: true, color: COR.tomate, charSpacing: 2 });
+  texto(slide, titulo, { x: 0.5, y: 0.56, w: 9, h: 0.45, fontSize: 23, bold: true, fontFace: "Cambria" });
+  texto(slide, subtitulo, { x: 0.5, y: 1.0, w: 9, h: 0.26, fontSize: 11, color: COR.suave });
+}
+
+function legenda(slide, x, y, w, conteudo) {
+  texto(slide, conteudo, { x, y, w, h: 0.5, fontSize: 10.5, color: COR.suave });
+}
+
+// 13. Estrutura no repositorio
+{
+  const s = pres.addSlide();
+  cabecalhoAnexo(s, "O que está versionado no repositório", "Branch docs/entrega-1-manuais-e-apresentacao, capturado do GitHub");
+  imagem(s, "github-pasta-entrega1.png", 0.5, 1.32, 4.45);
+  imagem(s, "github-pasta-casos-manuais.png", 5.05, 1.32, 4.45);
+  legenda(s, 0.5, 4.62, 4.45, "docs/entrega-1: relatório, apresentação e casos manuais");
+  legenda(s, 5.05, 4.62, 4.45, "casos-manuais: um documento por integrante, com prints");
+  texto(s, "Tudo o que está nestes slides sai desses arquivos: nada foi montado só para a apresentação.",
+        { x: 0.5, y: 5.12, w: 9, h: 0.3, fontSize: 11.5 });
+  s.addNotes("Anexo. Essa é a estrutura real no GitHub. A pasta docs/entrega-1 tem o relatório, a apresentação e os casos manuais. Se a professora quiser conferir qualquer número do deck, está tudo versionado.");
+}
+
+// 14. Issues no GitHub
+{
+  const s = pres.addSlide();
+  cabecalhoAnexo(s, "Rastreabilidade no GitHub", "Issues do repositório: unit-test, manual-test e os defeitos encontrados");
+  imagem(s, "github-issues.png", 5.3, 1.35, 4.2);
+  texto(s, [
+    { text: "17 issues no total: 12 abertas e 5 fechadas.", options: { bullet: true, breakLine: true } },
+    { text: "unit-test (#1 a #5): uma por classe testada.", options: { bullet: true, breakLine: true } },
+    { text: "manual-test (#6 a #10): uma por caso de teste.", options: { bullet: true, breakLine: true } },
+    { text: "bug (#20 a #25): os seis defeitos que abrimos, cada um com o teste que reproduz.", options: { bullet: true, breakLine: true } },
+    { text: "#17: aberta pelo grupo a partir do CT-04; a causa é a #20.", options: { bullet: true } },
+  ], { x: 0.5, y: 1.5, w: 4.5, h: 3.0, fontSize: 12.5, paraSpaceAfter: 6 });
+  texto(s, "Os cinco achados dos testes manuais ainda não viraram issue: estão listados em docs/entrega-1/README.md.",
+        { x: 0.5, y: 4.6, w: 4.5, h: 0.6, fontSize: 11, color: COR.suave });
+  s.addNotes("Anexo. Aqui está a rastreabilidade. Cada classe testada tem issue, cada caso manual tem issue, e cada defeito que abrimos tem uma issue com o teste que reproduz. As issues 20 a 25 são as que a gente abriu nesta entrega.");
+}
+
+// 15. Casos manuais CT-01 a CT-04
+{
+  const s = pres.addSlide();
+  cabecalhoAnexo(s, "Casos de teste manuais", "Cabeçalho dos documentos: testador, data e ambiente de execução");
+  imagem(s, "caso-01.png", 0.5, 1.3, 3.9);
+  imagem(s, "caso-02.png", 5.4, 1.3, 3.9);
+  imagem(s, "caso-03.png", 0.5, 3.45, 3.9);
+  imagem(s, "caso-04.png", 5.4, 3.45, 3.9);
+  s.addNotes("Anexo. Esses são os cabeçalhos dos documentos de teste manual: CT-01 a CT-04. Cada um tem quem executou, a data e o ambiente. O formato é o mesmo modelo que o grupo já usava no CT-04.");
+}
+
+// 16. CT-05 e as suites de teste
+{
+  const s = pres.addSlide();
+  cabecalhoAnexo(s, "CT-05 e as suítes de teste", "Último caso manual e a pasta de testes no repositório");
+  imagem(s, "caso-05.png", 0.5, 1.32, 4.45);
+  imagem(s, "github-pasta-testes.png", 5.05, 1.32, 4.45);
+  legenda(s, 0.5, 3.7, 4.45, "CT-05 — Gestão de insumos e estoque, executado por Felipe Paixão");
+  legenda(s, 5.05, 4.62, 4.45, "src/test/java: as classes de teste, uma pasta por camada");
+  s.addNotes("Anexo. À esquerda o CT-05, o último caso manual. À direita a pasta de testes no repositório, organizada por camada: Controllers, DAO e Helpers.");
+}
+
+// 17. Execucao das suites
+{
+  const s = pres.addSlide();
+  cabecalhoAnexo(s, "Execução das suítes", "Saída real do Maven, nas duas suítes");
+  imagem(s, "execucao-maven.png", 0.5, 1.35, 9.0);
+  texto(s, "A suíte padrão fica verde. A de defeitos fica vermelha de propósito: cada teste ali descreve o comportamento correto e falha enquanto o defeito existir.",
+        { x: 0.5, y: 4.2, w: 9, h: 0.6, fontSize: 12.5 });
+  texto(s, "Reproduzir:  mvn clean test   ·   mvn test -Pdefeitos", { x: 0.5, y: 4.95, w: 9, h: 0.3, fontSize: 12.5, bold: true });
+  s.addNotes("Anexo. Essa é a saída real do Maven. Em cima, a suíte padrão: 115 testes, zero falhas. Embaixo, o perfil de defeitos, com os cinco testes vermelhos e o nome de cada um. Dá pra rodar os dois comandos na hora, se quiserem ver.");
+}
+
 pres.writeFile({ fileName: path.join(__dirname, "apresentacao-entrega-1.pptx") }).then((f) => console.log("gerado:", path.basename(f)));

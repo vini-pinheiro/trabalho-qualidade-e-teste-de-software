@@ -4,7 +4,7 @@
 
 [![Capa da apresentação da Entrega 1](docs/entrega-1/apresentacao/preview/capa.png)](docs/entrega-1/apresentacao/apresentacao-entrega-1.pptx)
 
-Doze slides: abertura, dois por integrante e encerramento.
+Dezessete slides: abertura, dois por integrante, encerramento e cinco anexos com as evidencias (estrutura do repositorio, issues, casos manuais e a saida real do Maven).
 
 ![Os 12 slides da apresentação](docs/entrega-1/apresentacao/preview/slides.png)
 
@@ -12,6 +12,7 @@ Doze slides: abertura, dois por integrante e encerramento.
 - [Roteiro de falas (.pdf)](docs/entrega-1/apresentacao/roteiro-apresentacao.pdf) — formato teleprompter, uma página por integrante
 - [Relatório da Entrega 1](docs/entrega-1/README.md) — comandos, resultados, cobertura e defeitos
 - [Casos de teste manuais](docs/entrega-1/casos-manuais) — um por integrante, com prints da execução
+- [Evidências dos anexos](docs/entrega-1/apresentacao/anexos) — capturas do GitHub, dos documentos e da execução dos testes
 
 ### Resultado
 

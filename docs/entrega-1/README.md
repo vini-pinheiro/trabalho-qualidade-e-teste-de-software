@@ -38,9 +38,10 @@ Alguns passos ficaram sem status preenchido nos documentos, por dependerem de um
 
 ## Apresentação
 
-[Slides](apresentacao/apresentacao-entrega-1.pptx) (12 slides) e [roteiro de falas](apresentacao/roteiro-apresentacao.pdf).
+[Slides](apresentacao/apresentacao-entrega-1.pptx) (17 slides: 12 de conteudo e 5 de anexos) e [roteiro de falas](apresentacao/roteiro-apresentacao.pdf).
 Os dois são gerados por script: `node apresentacao/gerar-apresentacao.js` e depois `python apresentacao/gerar-roteiro.py`,
 que lê as falas das notas do apresentador para os dois arquivos não divergirem.
+As imagens dos anexos ficam em [apresentacao/anexos](apresentacao/anexos): capturas do GitHub, o cabecalho de cada caso manual e a saida real do Maven.
 
 ## Classes por integrante
 
