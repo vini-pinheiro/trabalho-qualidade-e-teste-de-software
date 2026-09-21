@@ -4,6 +4,8 @@ const path = require("path");
 const pptxgen = require("pptxgenjs");
 
 const COR = { fundo: "2B1B17", mostarda: "F2A900", tomate: "C8352B", texto: "2B1B17", suave: "6B5B55", cartao: "F6F1EE", branco: "FFFFFF", verde: "2E7D32" };
+const URL_REPO = "https://github.com/vini-pinheiro/trabalho-qualidade-e-teste-de-software";
+const URL_ISSUES = URL_REPO + "/issues";
 const FONTE = "Calibri";
 const MONO = "Courier New";
 
@@ -23,8 +25,24 @@ function cabecalho(slide, numero, area, titulo, responsavel) {
   texto(slide, titulo, { x: 1.25, y: 0.58, w: 8.2, h: 0.5, fontSize: 26, bold: true, fontFace: "Cambria" });
 }
 
+// Quebra o texto em trechos e transforma cada "#NN" num link para a issue correspondente
+function comLinksDeIssue(conteudo, corDoLink) {
+  return String(conteudo).split(/(#\d+)/).filter(function (parte) {
+    return parte !== "";
+  }).map(function (parte) {
+    const numero = parte.match(/^#(\d+)$/);
+    if (!numero) {
+      return { text: parte };
+    }
+    return {
+      text: parte,
+      options: { hyperlink: { url: URL_ISSUES + "/" + numero[1], tooltip: "Issue " + parte }, color: corDoLink, underline: true },
+    };
+  });
+}
+
 function rodape(slide, referencia) {
-  texto(slide, referencia, { x: 0.5, y: 5.2, w: 9, h: 0.25, fontSize: 8.5, color: COR.suave });
+  texto(slide, comLinksDeIssue(referencia, COR.tomate), { x: 0.5, y: 5.2, w: 9, h: 0.25, fontSize: 8.5, color: COR.suave });
 }
 
 function cartao(slide, x, y, w, h, cor) {
@@ -134,7 +152,11 @@ const AREAS = [
   texto(s, "QUALIDADE E TESTE DE SOFTWARE  ·  ENTREGA 1", { x: 0.6, y: 0.9, w: 6.2, h: 0.3, fontSize: 12, color: COR.mostarda, charSpacing: 3 });
   texto(s, "Code Burguer's", { x: 0.6, y: 1.35, w: 6.4, h: 0.9, fontSize: 48, bold: true, color: COR.branco, fontFace: "Cambria" });
   texto(s, "Plano de teste, testes unitários e testes manuais de uma lanchonete online em Java (Servlets + JDBC + PostgreSQL)", { x: 0.6, y: 2.35, w: 6.0, h: 0.9, fontSize: 16, color: "E8DFDB" });
-  texto(s, "Yuri Mascarenhas · Vinicius Rocha Pinheiro · Thiago Ferreira · Vinicius Fonseca de Freitas · Felipe Paixão", { x: 0.6, y: 4.3, w: 6.2, h: 0.6, fontSize: 12, color: "E8DFDB" });
+  texto(s, "CÓDIGO, TESTES E DOCUMENTAÇÃO", { x: 0.6, y: 3.45, w: 6.2, h: 0.24, fontSize: 10, color: COR.mostarda, charSpacing: 2 });
+  texto(s, [{ text: "github.com/vini-pinheiro/trabalho-qualidade-e-teste-de-software",
+              options: { hyperlink: { url: URL_REPO, tooltip: "Repositório do trabalho" } } }],
+        { x: 0.6, y: 3.72, w: 6.6, h: 0.52, fontSize: 14.5, bold: true, color: COR.branco });
+  texto(s, "Yuri Mascarenhas · Vinicius Rocha Pinheiro · Thiago Ferreira · Vinicius Fonseca de Freitas · Felipe Paixão", { x: 0.6, y: 4.5, w: 6.2, h: 0.6, fontSize: 12, color: "E8DFDB" });
   s.addNotes("Boa noite, pessoal.\nA gente é o grupo do Code Burguer's.\nÉ um sistema de lanchonete online, feito em Java, com Servlet e JDBC.\n[PAUSA]\nSó que não fomos nós que escrevemos esse sistema.\nEle veio pronto, de um projeto antigo.\nO nosso trabalho foi outro: testar ele.\nE achar o que está quebrado.\n[PAUSA]\nA gente dividiu em cinco áreas, uma pra cada um.\nCada pessoa tem dois slides:\no que testou, e o que encontrou.\nAdianto que encontramos bastante coisa.");
 }
 
@@ -158,7 +180,7 @@ AREAS.forEach((a) => {
   bloco(s2, 3.2, 1.5, 2.7, "Cenário manual", a.manual, 1.1);
   bloco(s2, 3.2, 2.9, 2.7, "Situação", a.statusManual, 1.75);
   cartao(s2, 6.4, 1.3, 3.1, 3.7, COR.fundo);
-  texto(s2, a.achadoTitulo.toUpperCase(), { x: 6.6, y: 1.5, w: 2.7, h: 0.5, fontSize: 9.5, bold: true, color: COR.mostarda, charSpacing: 1 });
+  texto(s2, comLinksDeIssue(a.achadoTitulo.toUpperCase(), COR.mostarda), { x: 6.6, y: 1.5, w: 2.7, h: 0.5, fontSize: 9.5, bold: true, color: COR.mostarda, charSpacing: 1 });
   texto(s2, "Área de " + a.quem, { x: 6.6, y: 2.05, w: 2.7, h: 0.3, fontSize: 10, italic: true, color: "E8DFDB" });
   texto(s2, a.achado, { x: 6.6, y: 2.45, w: 2.7, h: 2.4, fontSize: 12.5, color: COR.branco });
   rodape(s2, "Sem testes de integração nesta entrega  ·  " + a.ref);
@@ -182,7 +204,10 @@ AREAS.forEach((a) => {
     { text: "Nenhum defeito foi corrigido: o objetivo foi encontrar, reproduzir e registrar.", options: { bullet: true, breakLine: true } },
     { text: "Cobertura mede o que foi exercitado, não ausência de defeitos.", options: { bullet: true } },
   ], { x: 0.6, y: 3.3, w: 8.8, h: 1.6, fontSize: 13, color: COR.branco, paraSpaceAfter: 4 });
-  texto(s, "Maven 3.8.4 · OpenJDK 1.8.0_322 · JUnit 5.8.2 · Mockito 4.6.1 · JaCoCo 0.8.11 · execução de 21/09/2026 · docs/entrega-1/README.md", { x: 0.6, y: 5.15, w: 8.8, h: 0.25, fontSize: 9, color: "B9ABA5" });
+  texto(s, [{ text: "github.com/vini-pinheiro/trabalho-qualidade-e-teste-de-software",
+              options: { hyperlink: { url: URL_REPO, tooltip: "Repositório do trabalho" } } }],
+        { x: 0.6, y: 4.93, w: 8.8, h: 0.3, fontSize: 13, bold: true, color: COR.mostarda });
+  texto(s, "Maven 3.8.4 · OpenJDK 1.8.0_322 · JUnit 5.8.2 · Mockito 4.6.1 · JaCoCo 0.8.11 · execução de 21/09/2026 · docs/entrega-1/README.md", { x: 0.6, y: 5.3, w: 8.8, h: 0.25, fontSize: 9, color: "B9ABA5" });
   s.addNotes("Fechando.\n[PAUSA]\n115 testes rodando, todos passando.\n[PAUSA]\nMais cinco testes que ficam vermelhos de propósito.\nEles descrevem como deveria funcionar,\ne falham enquanto o defeito existir.\n[PAUSA]\nE onze defeitos no total: seis já viraram issue, da vinte até a vinte e cinco.\n[PAUSA]\nO que ficou faltando, e a gente não vai esconder:\ncinco achados dos testes manuais ainda não viraram issue.\nE a área de estoque ficou sem classe de regra de negócio,\ncomo eu mostrei ali atrás.\nE a gente não corrigiu nenhum defeito,\nporque o objetivo dessa entrega era encontrar e registrar.\n[PAUSA]\nUma última coisa, porque é fácil confundir:\ncobertura alta não quer dizer que não tem defeito.\nQuer dizer só que aquele trecho foi executado.\n[PAUSA]\nTanto é que a gente tem cobertura alta e seis defeitos.\n[PAUSA]\nÉ isso. Obrigado, e a gente está aberto pra perguntas.");
 }
 
@@ -223,8 +248,10 @@ function legenda(slide, x, y, w, conteudo) {
   imagem(s, "github-pasta-casos-manuais.png", 5.05, 1.32, 4.45);
   legenda(s, 0.5, 4.62, 4.45, "docs/entrega-1: relatório, apresentação e casos manuais");
   legenda(s, 5.05, 4.62, 4.45, "casos-manuais: um documento por integrante, com prints");
-  texto(s, "Tudo o que está nestes slides sai desses arquivos: nada foi montado só para a apresentação.",
-        { x: 0.5, y: 5.12, w: 9, h: 0.3, fontSize: 11.5 });
+  texto(s, [{ text: "Tudo o que está nestes slides sai desses arquivos:  " },
+             { text: "github.com/vini-pinheiro/trabalho-qualidade-e-teste-de-software",
+               options: { hyperlink: { url: URL_REPO, tooltip: "Repositório do trabalho" }, bold: true, color: COR.tomate } }],
+        { x: 0.5, y: 5.05, w: 9, h: 0.5, fontSize: 11 });
   s.addNotes("Anexo. Essa é a estrutura real no GitHub. A pasta docs/entrega-1 tem o relatório, a apresentação e os casos manuais. Se a professora quiser conferir qualquer número do deck, está tudo versionado.");
 }
 
@@ -239,35 +266,75 @@ function legenda(slide, x, y, w, conteudo) {
     { text: "manual-test (#6 a #10): uma por caso de teste.", options: { bullet: true, breakLine: true } },
     { text: "bug (#20 a #25): os seis defeitos que abrimos, cada um com o teste que reproduz.", options: { bullet: true, breakLine: true } },
     { text: "#17: aberta pelo grupo a partir do CT-04; a causa é a #20.", options: { bullet: true } },
-  ], { x: 0.5, y: 1.5, w: 4.5, h: 3.0, fontSize: 12.5, paraSpaceAfter: 6 });
+  ], { x: 0.5, y: 1.45, w: 4.5, h: 2.25, fontSize: 12.5, paraSpaceAfter: 6 });
+  texto(s, "ABRIR NO GITHUB", { x: 0.5, y: 3.72, w: 4.5, h: 0.22, fontSize: 10, bold: true, color: COR.tomate, charSpacing: 1 });
+  const linkIssues = { hyperlink: { url: URL_ISSUES, tooltip: "Todas as issues" } };
+  texto(s, [{ text: "github.com/vini-pinheiro/", options: Object.assign({ breakLine: true }, linkIssues) },
+             { text: "trabalho-qualidade-e-teste-de-software/issues", options: Object.assign({}, linkIssues) }],
+        { x: 0.5, y: 3.94, w: 4.6, h: 0.46, fontSize: 11, bold: true, color: COR.texto });
+  texto(s, comLinksDeIssue("Defeitos: #20 · #21 · #22 · #23 · #24 · #25 · #17", COR.tomate),
+        { x: 0.5, y: 4.46, w: 4.6, h: 0.26, fontSize: 11.5 });
+  texto(s, comLinksDeIssue("Testes unitários: #1 a #5 · Casos manuais: #6 a #10", COR.tomate),
+        { x: 0.5, y: 4.74, w: 4.6, h: 0.26, fontSize: 11.5 });
   texto(s, "Os cinco achados dos testes manuais ainda não viraram issue: estão listados em docs/entrega-1/README.md.",
-        { x: 0.5, y: 4.6, w: 4.5, h: 0.6, fontSize: 11, color: COR.suave });
+        { x: 0.5, y: 5.04, w: 4.6, h: 0.45, fontSize: 9.5, color: COR.suave });
   s.addNotes("Anexo. Aqui está a rastreabilidade. Cada classe testada tem issue, cada caso manual tem issue, e cada defeito que abrimos tem uma issue com o teste que reproduz. As issues 20 a 25 são as que a gente abriu nesta entrega.");
 }
 
-// 15. Casos manuais CT-01 a CT-04
-{
-  const s = pres.addSlide();
-  cabecalhoAnexo(s, "Casos de teste manuais", "Cabeçalho dos documentos: testador, data e ambiente de execução");
-  imagem(s, "caso-01.png", 0.5, 1.3, 3.9);
-  imagem(s, "caso-02.png", 5.4, 1.3, 3.9);
-  imagem(s, "caso-03.png", 0.5, 3.45, 3.9);
-  imagem(s, "caso-04.png", 5.4, 3.45, 3.9);
-  s.addNotes("Anexo. Esses são os cabeçalhos dos documentos de teste manual: CT-01 a CT-04. Cada um tem quem executou, a data e o ambiente. O formato é o mesmo modelo que o grupo já usava no CT-04.");
-}
+// 15 a 19. Um slide por integrante: documento do caso e tela do sistema
+const CASOS_ANEXO = [
+  {
+    ct: "CT-01", area: "Autenticação e sessão", quem: "Yuri Mascarenhas", data: "21/09", passou: 8, falhou: 0,
+    caso: "caso-01.png", tela: "tela-01.png",
+    legendaTela: "Sessão ativa: nome e endereço carregados a partir do cookie de login",
+    resultado: "Todos os passos passaram. Fica a observação: o token não expira no servidor.",
+    issues: "Caso: #6",
+  },
+  {
+    ct: "CT-02", area: "Carrinho e finalização de compra", quem: "Vinicius Rocha Pinheiro", data: "21/09", passou: 6, falhou: 3,
+    caso: "caso-02.png", tela: "tela-02.png",
+    legendaTela: "Resumo do pedido mostrando R$ 36,00 na tela; o banco gravou R$ 18,00",
+    resultado: "Finalizar com bebida devolveu HTTP 500 e o carrinho vazio gravou pedido de R$ 0,00.",
+    issues: "Caso: #7 · defeitos: #21 e #22",
+  },
+  {
+    ct: "CT-03", area: "Cadastro de cliente", quem: "Thiago Ferreira", data: "21/09", passou: 2, falhou: 5,
+    caso: "caso-03.png", tela: "tela-03.png",
+    legendaTela: "Nome cadastrado como \"José Conceição\" aparece corrompido na tela",
+    resultado: "Campos vazios aceitos, usuário duplicado aceito e acentuação corrompida.",
+    issues: "Caso: #8 · defeitos: #24 e #23",
+  },
+  {
+    ct: "CT-04", area: "Montagem de lanche personalizado", quem: "Vinicius Fonseca", data: "20/09", passou: 2, falhou: 2,
+    caso: "caso-04.png", tela: "tela-04.png",
+    legendaTela: "Tela de montagem: escolha do pão e dos ingredientes, com o preço somado",
+    resultado: "O botão Adicionar não responde e Cancelar devolve tela branca.",
+    issues: "Caso: #9 · defeitos: #17 e #20",
+  },
+  {
+    ct: "CT-05", area: "Gestão de insumos e estoque", quem: "Felipe Paixão", data: "21/09", passou: 5, falhou: 3,
+    caso: "caso-05.png", tela: "tela-05.png",
+    legendaTela: "Painel de estoque: insumos com quantidade, preço de compra e de venda",
+    resultado: "Quantidade negativa aceita no cadastro e na alteração; remoção de insumo em uso dá HTTP 500.",
+    issues: "Caso: #10 · defeito: #25",
+  },
+];
 
-// 16. CT-05 e as suites de teste
-{
+CASOS_ANEXO.forEach(function (c) {
   const s = pres.addSlide();
-  cabecalhoAnexo(s, "CT-05 e as suítes de teste", "Último caso manual e a pasta de testes no repositório");
-  imagem(s, "caso-05.png", 0.5, 1.32, 4.45);
-  imagem(s, "github-pasta-testes.png", 5.05, 1.32, 4.45);
-  legenda(s, 0.5, 3.7, 4.45, "CT-05 — Gestão de insumos e estoque, executado por Felipe Paixão");
-  legenda(s, 5.05, 4.62, 4.45, "src/test/java: as classes de teste, uma pasta por camada");
-  s.addNotes("Anexo. À esquerda o CT-05, o último caso manual. À direita a pasta de testes no repositório, organizada por camada: Controllers, DAO e Helpers.");
-}
+  cabecalhoAnexo(s, c.ct + " — " + c.area,
+    c.quem + "  ·  executado em " + c.data + "  ·  " + c.passou + " passos PASSOU, " + c.falhou + " FALHOU");
+  imagem(s, c.caso, 0.5, 1.32, 4.25);
+  imagem(s, c.tela, 5.05, 1.32, 4.45);
+  legenda(s, 5.05, 3.9, 4.45, c.legendaTela);
+  texto(s, c.resultado, { x: 0.5, y: 4.5, w: 9, h: 0.45, fontSize: 12.5 });
+  texto(s, comLinksDeIssue(c.issues, COR.tomate), { x: 0.5, y: 5.05, w: 9, h: 0.3, fontSize: 11 });
+  s.addNotes("Anexo do " + c.ct + ". À esquerda o cabeçalho do documento, com quem executou e o ambiente. "
+    + "À direita uma tela do sistema tirada durante a execução. Resultado: " + c.passou + " passos passaram e "
+    + c.falhou + " falharam.");
+});
 
-// 17. Execucao das suites
+// 20. Execucao das suites
 {
   const s = pres.addSlide();
   cabecalhoAnexo(s, "Execução das suítes", "Saída real do Maven, nas duas suítes");
