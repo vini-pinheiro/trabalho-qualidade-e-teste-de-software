@@ -4,7 +4,7 @@
 
 [![Capa da apresentação da Entrega 1](docs/entrega-1/apresentacao/preview/capa.png)](docs/entrega-1/apresentacao/apresentacao-entrega-1.pptx)
 
-Vinte slides: abertura, dois por integrante, encerramento e oito anexos com as evidências — estrutura do repositório, issues, um slide por integrante com o documento do caso e a tela do sistema, e a saída real do Maven.
+Vinte slides: abertura, três por integrante — o que testamos, os resultados e a evidência do caso manual, com o documento e a tela do sistema —, encerramento e três anexos finais: estrutura do repositório, issues e a saída real do Maven.
 
 ![Os 12 slides da apresentação](docs/entrega-1/apresentacao/preview/slides.png)
 

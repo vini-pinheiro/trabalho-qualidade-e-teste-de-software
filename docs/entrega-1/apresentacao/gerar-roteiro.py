@@ -24,17 +24,19 @@ CREME = colors.HexColor("#F6F1EE")
 # (slides, quem fala, parte, tempo, o que abrir na hora de demonstrar)
 PARTES = [
     ([1], "Yuri Mascarenhas", "Abertura", "1 min", None),
-    ([2, 3], "Yuri Mascarenhas", "Autenticação, sessões e controle de acesso", "3 min",
+    ([2, 3, 4], "Yuri Mascarenhas", "Autenticação, sessões e controle de acesso", "4 min",
      "ValidadorCookieLimitesTest · mvn test -Dtest=ValidadorCookie*"),
-    ([4, 5], "Vinicius Rocha Pinheiro", "Carrinho, pedidos e checkout", "3 min",
+    ([5, 6, 7], "Vinicius Rocha Pinheiro", "Carrinho, pedidos e checkout", "4 min",
      "mvn test -Pdefeitos -Dtest=ComprarRegrasTest · mostrar 'expected: <35.0> but was: <20.0>'"),
-    ([6, 7], "Thiago Ferreira", "Gestão de clientes e endereços", "3 min",
+    ([8, 9, 10], "Thiago Ferreira", "Gestão de clientes e endereços", "4 min",
      "DaoClienteTest (deveRecusarClienteInativo) · cadastro.js, a condição !field.name == 'complemento'"),
-    ([8, 9], "Vinicius Fonseca de Freitas", "Cardápio e montagem de lanches", "3 min",
+    ([11, 12, 13], "Vinicius Fonseca de Freitas", "Cardápio e montagem de lanches", "4 min",
      "salvarLancheCliente.java, os dois while(keys.hasNext()) · mvn test -Pdefeitos -Dtest=SalvarLancheClienteTest"),
-    ([10, 11], "Felipe Paixão", "Gestão de estoque e insumos", "3 min",
+    ([14, 15, 16], "Felipe Paixão", "Gestão de estoque e insumos", "4 min",
      "IngredienteControllersTest (deveBloquearQuemNaoEhFuncionario e caracterizacaoValoresNegativosSaoAceitos)"),
-    ([12], "Felipe Paixão", "Encerramento", "1 min", "mvn clean test · mostrar 'Tests run: 115, Failures: 0'"),
+    ([17], "Felipe Paixão", "Encerramento", "1 min", "mvn clean test · mostrar 'Tests run: 115, Failures: 0'"),
+    ([18, 19, 20], "Qualquer um do grupo", "Anexos — só se perguntarem", "reserva",
+     "Estrutura no repositório, issues no GitHub e a saída das duas suítes"),
 ]
 
 PERGUNTAS = [
@@ -123,20 +125,20 @@ def main():
                    leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)
     modelos = [PageTemplate(id="capa", frames=[quadro], onPage=marcador(""))]
     for i, (slides, quem, _parte, _tempo, _dem) in enumerate(PARTES):
-        rotulo = "Slide %d" % slides[0] if len(slides) == 1 else "Slides %d e %d" % (slides[0], slides[1])
+        rotulo = "Slide %d" % slides[0] if len(slides) == 1 else "Slides %d a %d" % (slides[0], slides[-1])
         modelos.append(PageTemplate(id="parte%d" % i, frames=[quadro], onPage=marcador(quem + "  ·  " + rotulo)))
     doc.addPageTemplates(modelos)
     largura = doc.width
 
     historia = [
         Paragraph("Roteiro da apresentação", e["titulo"]),
-        Paragraph("Code Burguer's · Qualidade e Teste de Software · Entrega 1 · 12 slides, cerca de 17 minutos", e["sub"]),
+        Paragraph("Code Burguer's · Qualidade e Teste de Software · Entrega 1 · 20 slides, cerca de 22 minutos", e["sub"]),
         Spacer(1, 14),
     ]
 
     linhas = [["Slides", "Quem fala", "Parte", "Tempo"]]
     for slides, quem, parte, tempo, _ in PARTES:
-        rotulo = str(slides[0]) if len(slides) == 1 else "%d e %d" % (slides[0], slides[1])
+        rotulo = str(slides[0]) if len(slides) == 1 else "%d a %d" % (slides[0], slides[-1])
         linhas.append([rotulo, quem, parte, tempo])
     tabela = Table(linhas, colWidths=[2.2 * cm, 6.0 * cm, 11.5 * cm, 2.2 * cm])
     tabela.setStyle(TableStyle([
@@ -152,7 +154,7 @@ def main():
         "saber explicar o teste que está citando.", e, largura)]
 
     for i, (slides, quem, parte, tempo, demonstracao) in enumerate(PARTES):
-        rotulo = "Slide %d" % slides[0] if len(slides) == 1 else "Slides %d e %d" % (slides[0], slides[1])
+        rotulo = "Slide %d" % slides[0] if len(slides) == 1 else "Slides %d a %d" % (slides[0], slides[-1])
         historia += [NextPageTemplate("parte%d" % i), PageBreak(),
                      Paragraph(quem, e["quem"]), Paragraph("%s · %s · %s" % (parte, rotulo, tempo), e["sub"])]
         for n in slides:
