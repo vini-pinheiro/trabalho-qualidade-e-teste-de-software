@@ -24,6 +24,11 @@ public class DaoToken {
     public DaoToken(){
         this.conecta = new DaoUtil().conecta();
     }
+
+    // Permite testar o DAO com uma conexão controlada, sem depender do DaoUtil
+    public DaoToken(Connection conecta) {
+        this.conecta = conecta;
+    }
     
     public void salvar(String token){
         String sql = "INSERT INTO tb_tokens(token) "

@@ -30,6 +30,21 @@ import org.json.JSONObject;
  */
 public class salvarLancheCliente extends HttpServlet {
 
+    // Nulos no uso normal (Tomcat): as dependências continuam sendo criadas a cada requisição
+    private ValidadorCookie validadorCookie;
+    private DaoLanche lancheDaoInjetado;
+    private DaoIngrediente ingredienteDaoInjetado;
+
+    public salvarLancheCliente() {
+    }
+
+    // Usado nos testes para isolar cookie e banco
+    public salvarLancheCliente(ValidadorCookie validadorCookie, DaoLanche lancheDao, DaoIngrediente ingredienteDao) {
+        this.validadorCookie = validadorCookie;
+        this.lancheDaoInjetado = lancheDao;
+        this.ingredienteDaoInjetado = ingredienteDao;
+    }
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -52,7 +67,7 @@ public class salvarLancheCliente extends HttpServlet {
         
         try{
         Cookie[] cookies = request.getCookies();
-        ValidadorCookie validar = new ValidadorCookie();
+        ValidadorCookie validar = (validadorCookie != null) ? validadorCookie : new ValidadorCookie();
         
         resultado = validar.validar(cookies);
         }catch(java.lang.NullPointerException e){}
@@ -73,8 +88,8 @@ public class salvarLancheCliente extends HttpServlet {
             lanche.setDescricao(dados.getString("descricao"));
             
             
-            DaoLanche lancheDao = new DaoLanche();
-            DaoIngrediente ingredienteDao = new DaoIngrediente();
+            DaoLanche lancheDao = (lancheDaoInjetado != null) ? lancheDaoInjetado : new DaoLanche();
+            DaoIngrediente ingredienteDao = (ingredienteDaoInjetado != null) ? ingredienteDaoInjetado : new DaoIngrediente();
             
             Iterator<String> keys = ingredientes.keys();
             
