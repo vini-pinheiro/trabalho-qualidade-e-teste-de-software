@@ -22,6 +22,27 @@ docker run --rm -v "$PWD":/app -w /app maven:3.8.4-openjdk-8 mvn -B clean test
 | Padrão (`mvn clean test`) | 115 | 115 | 0 |
 | Defeitos conhecidos (`-Pdefeitos`) | 5 | 0 | 5 |
 
+## Testes manuais
+
+Os cinco casos estão em [casos-manuais](casos-manuais), no modelo usado pelo grupo, com prints anexados.
+
+| Caso | Testador | Data | Passos PASSOU | Passos FALHOU |
+|---|---|---|---|---|
+| CT-01 — Autenticação e encerramento de sessão | Yuri Mascarenhas | 21/09 | 8 | 0 |
+| CT-02 — Carrinho e finalização de compra | Vinicius Rocha Pinheiro | 21/09 | 6 | 3 |
+| CT-03 — Cadastro de cliente | Thiago Ferreira | 21/09 | 2 | 5 |
+| CT-04 — Montagem de lanche personalizado | Vinicius Fonseca | 20/09 | 2 | 2 |
+| CT-05 — Gestão de insumos e estoque | Felipe Paixão | 21/09 | 5 | 3 |
+
+Alguns passos ficaram sem status preenchido nos documentos, por dependerem de um passo anterior que falhou.
+
+## Apresentação
+
+[Slides](apresentacao/apresentacao-entrega-1.pptx) (21 slides: três por integrante, mais abertura, encerramento e quatro anexos) e [roteiro de falas](apresentacao/roteiro-apresentacao.pdf).
+Os dois são gerados por script: `node apresentacao/gerar-apresentacao.js` e depois `python apresentacao/gerar-roteiro.py`,
+que lê as falas das notas do apresentador para os dois arquivos não divergirem.
+As imagens dos anexos ficam em [apresentacao/anexos](apresentacao/anexos): capturas do GitHub, o cabecalho de cada caso manual e a saida real do Maven.
+
 ## Classes por integrante
 
 | Área | Classe(s) sob teste | Testes |
@@ -62,6 +83,18 @@ JSON) foram a melhor alternativa encontrada.
 | DEF-04 | Consultas por nome/usuário concatenam SQL: apóstrofo quebra o comando (e permite injeção) | `DaoClienteTest.caracterizacaoPesquisaPorUsuarioConcatenaSql` |
 | DEF-05 | Cadastro aceita nome, usuário e senha vazios (em `cadastro.js`, `!field.name == 'complemento'` é sempre falso, então a validação da tela também não dispara) | `CadastroTest.naoDeveGravarClienteComCamposObrigatoriosVazios` |
 | DEF-07 | Insumo aceita quantidade e valores negativos (sem validação no servlet nem `CHECK` no banco) | `IngredienteControllersTest.naoDeveGravarEstoqueOuValoresNegativos` |
+
+Cada um desses tem issue aberta: DEF-01 → #20, DEF-02 → #21, DEF-03 → #22, DEF-04 → #23, DEF-05 → #24, DEF-07 → #25.
+
+### Encontrados nos testes manuais, ainda sem issue
+
+| Defeito | Onde apareceu |
+|---|---|
+| Finalizar compra com bebida no carrinho devolve HTTP 500 (`NullPointerException` em `comprar.java`) | CT-02 |
+| Carrinho vazio grava pedido de R$ 0,00 e responde "Pedido Salvo com Sucesso!" | CT-02 |
+| Dois clientes podem usar o mesmo usuário; o login passa a valer para o último cadastrado | CT-03 |
+| Nome com acento é gravado corrompido ("José Conceição" vira "Jos? Concei??o") | CT-03 |
+| Remover insumo usado em um lanche devolve HTTP 500 com a violação de chave estrangeira crua | CT-05 |
 
 Outras observações: não existe expiração de token no servidor (`tb_tokens` só guarda o texto; o único prazo é o
 `MaxAge` de 30 min do cookie); `tb_clientes.usuario` não tem `UNIQUE`.
