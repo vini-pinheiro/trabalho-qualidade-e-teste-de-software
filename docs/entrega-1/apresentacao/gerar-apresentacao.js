@@ -79,7 +79,7 @@ const AREAS = [
     fala2: "São 22 testes passando na suíte normal e dois testes que ficam vermelhos de propósito na suíte de defeitos. O primeiro: com 2 lanches de 15 e 1 refrigerante de 5 a tela mostra 35, mas o servlet grava 20, porque soma o preço uma vez por item. O segundo: o id do cliente vem do JSON e nunca é comparado com o cookie. Para demonstrar: mvn test -Pdefeitos -Dtest=ComprarRegrasTest.",
   },
   {
-    n: 3, area: "Cadastro de clientes", quem: "Thiago Ferreira Teixeira",
+    n: 3, area: "Cadastro de clientes", quem: "Felipe Paixão",
     classe: "DAO.DaoCliente + Controllers.cadastro + Helpers.EncryptadorMD5", metodos: "login, salvar, pesquisaPorUsuario · processRequest · encryptar",
     naoCrud: "login decide o acesso (hash MD5 igual E cliente ativo); salvar reaproveita endereço já existente. cadastro e EncryptadorMD5 não são DAO nem entidade.",
     estrategia: "Connection e DaoEndereco injetados por construtor (sem Objenesis/reflexão). Hash esperado vem da RFC 1321, não do próprio sistema.",
@@ -109,7 +109,7 @@ const AREAS = [
     fala2: "Tínhamos uma suspeita de que os ingredientes não eram salvos. Investigamos: o DaoLanche faz o INSERT normalmente. O problema é no servlet, que usa o mesmo Iterator em dois laços; o primeiro consome tudo e o segundo nunca executa. O teste espera 3 vínculos e recebe zero. No teste manual CT-04, feito em 20 de setembro, o botão Adicionar não respondeu, e isso virou a issue 17. Demonstração: mvn test -Pdefeitos -Dtest=SalvarLancheClienteTest.",
   },
   {
-    n: 5, area: "Insumos e estoque", quem: "Integrante 5",
+    n: 5, area: "Insumos e estoque", quem: "Thiago Ferreira",
     classe: "DAO.DaoIngrediente + Controllers.salvarIngrediente / alterarIngrediente", metodos: "salvar, alterar, remover, listarTodosPorLanche, pesquisaPorNome · processRequest",
     naoCrud: "Lacuna assumida: DaoIngrediente é CRUD e o sistema não tem regra de estoque (não há baixa na compra). Melhor alternativa: os servlets, que autorizam o funcionário e interpretam o JSON.",
     estrategia: "Connection injetada; um caso feliz e um de falha por operação. Nos servlets: autorizado, não autorizado, quantidade inválida, valores negativos.",
@@ -134,8 +134,8 @@ const AREAS = [
   texto(s, "QUALIDADE E TESTE DE SOFTWARE  ·  ENTREGA 1", { x: 0.6, y: 0.9, w: 6.2, h: 0.3, fontSize: 12, color: COR.mostarda, charSpacing: 3 });
   texto(s, "Code Burguer's", { x: 0.6, y: 1.35, w: 6.4, h: 0.9, fontSize: 48, bold: true, color: COR.branco, fontFace: "Cambria" });
   texto(s, "Plano de teste, testes unitários e testes manuais de uma lanchonete online em Java (Servlets + JDBC + PostgreSQL)", { x: 0.6, y: 2.35, w: 6.0, h: 0.9, fontSize: 16, color: "E8DFDB" });
-  texto(s, "Yuri Mascarenhas · Vinicius Rocha Pinheiro · Thiago Ferreira Teixeira · Vinicius Fonseca de Freitas · Integrante 5", { x: 0.6, y: 4.3, w: 6.2, h: 0.6, fontSize: 12, color: "E8DFDB" });
-  s.addNotes("Abertura. O sistema é o Code Burguer's, uma lanchonete online em Java com Servlets e JDBC, baseado no projeto APS-04. Dividimos em cinco áreas, uma por integrante: cada um apresenta a classe que testou, a estratégia, o resultado e o que encontrou. [Completar o nome do quinto integrante antes de apresentar.]");
+  texto(s, "Yuri Mascarenhas · Vinicius Rocha Pinheiro · Felipe Paixão · Vinicius Fonseca de Freitas · Thiago Ferreira", { x: 0.6, y: 4.3, w: 6.2, h: 0.6, fontSize: 12, color: "E8DFDB" });
+  s.addNotes("Abertura. O sistema é o Code Burguer's, uma lanchonete online em Java com Servlets e JDBC, baseado no projeto APS-04. Dividimos em cinco áreas, uma por integrante: cada um apresenta a classe que testou, a estratégia, o resultado e o que encontrou.");
 }
 
 // 2 a 11. Dois slides por integrante
