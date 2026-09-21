@@ -2,3 +2,4 @@ target/
 .env
 /.vs/trabalho-qualidade-e-teste-de-software/FileContentIndex
 /.vs
+/.playwright-mcp
