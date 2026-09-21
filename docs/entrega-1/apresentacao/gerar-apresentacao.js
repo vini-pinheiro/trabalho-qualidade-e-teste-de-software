@@ -57,11 +57,11 @@ const AREAS = [
     codigo: ["Cookie[] cookies = {", "  new Cookie(\"token\", \"7-valido\"),", "  new Cookie(\"token\", \"7-invalido\") };", "", "assertFalse(validador.validar(cookies));", "// validar() fica com o ULTIMO cookie,", "// getCookieIdCliente() com o PRIMEIRO"],
     testes: "26", cobertura: "22/22", defeitos: "0",
     manual: "CT-01 — Autenticação de usuário e validação de cookie (login, logout, página restrita).",
-    statusManual: "Issue #6 fechada pelo grupo. Registro da execução no documento do grupo.",
-    achadoTitulo: "Observação", achado: "Não existe expiração de token no servidor: tb_tokens guarda só o texto. O único prazo é o MaxAge de 30 min do cookie no navegador.",
+    statusManual: "Responsável: Yuri Mascarenhas. Issue #6 fechada pelo grupo. O documento do caso, no formato do CT-04, não está no repositório.",
+    achadoTitulo: "Observação de segurança", achado: "Não existe expiração de token no servidor: tb_tokens guarda só o texto. O único prazo é o MaxAge de 30 min do cookie no navegador.",
     ref: "ValidadorCookieTest · ValidadorCookieLimitesTest · issues #1 e #6",
-    fala1: "Minha parte é autenticação e sessão. A classe é o ValidadorCookie: ela não é CRUD, só recebe os cookies da requisição, procura o cookie certo pelo nome e pergunta ao DaoToken se o token existe. Nos testes o DaoToken é um mock, então nada depende de banco. Além dos casos básicos, testamos as fronteiras: requisição sem cookie, token de cliente tentando passar por funcionário, cookie duplicado e valor malformado. Para demonstrar: abrir ValidadorCookieLimitesTest e rodar mvn test -Dtest=ValidadorCookie*.",
-    fala2: "São 26 testes passando e todos os 22 ramos da classe cobertos. O achado mais interessante: procuramos a regra de expiração de token e ela não existe no servidor. A tabela só guarda o texto do token; quem expira é o cookie no navegador, em 30 minutos. Registramos como observação de segurança, não inventamos um resultado. O teste manual é o CT-01, issue 6.",
+    fala1: "Minha parte é login e sessão.\nA classe chama ValidadorCookie.\n[PAUSA]\nO que ela faz dá pra explicar em uma frase:\nchega uma requisição, ela olha os cookies,\nprocura o cookie chamado token,\ne pergunta pro banco se aquele token existe.\n[PAUSA]\nPor que ela não é CRUD?\nPorque ela não salva e não lê tabela nenhuma.\nEla decide. Ela olha o nome do cookie e escolhe o caminho.\n[PAUSA]\nNos testes o banco é falso, a gente usa Mockito.\nEntão roda em menos de um segundo, sem subir nada.\n[PAUSA]\nE não testamos só o caminho feliz.\nTestamos requisição sem cookie nenhum,\ntoken de cliente tentando entrar como funcionário,\ne esse aí do slide: cookie repetido.",
+    fala2: "26 testes passando.\nE os 22 ramos da classe cobertos.\nOu seja: todo if e todo else foi executado pelo menos uma vez.\n[PAUSA]\nAgora a parte interessante.\nA gente foi procurar onde o token expira.\n[PAUSA]\nE descobriu que ele não expira.\n[PAUSA]\nNo servidor, a tabela guarda só o texto do token. Nada mais.\nQuem expira é o cookie no navegador, em 30 minutos.\nSó que se alguém copiar aquele token, ele funciona pra sempre.\n[PAUSA]\nA gente não inventou uma regra que não existe.\nRegistrou como observação de segurança, e está no slide.",
   },
   {
     n: 2, area: "Carrinho e pedidos", quem: "Vinicius Rocha Pinheiro",
@@ -72,14 +72,14 @@ const AREAS = [
     codigo: ["// carrinho: 2 x X-Burger + 1 x Refrigerante", "double esperado = 2 * 15.00 + 1 * 5.00;", "", "enviar(\"{...\\\"X-Burger\\\": [\\\"15.00\\\",\\\"lanche\\\",2]...}\");", "", "assertEquals(esperado,", "  pedidoEnviadoAoDao().getValor_total(), 0.001);", "// expected: <35.0> but was: <20.0>"],
     testes: "22", cobertura: "15/16", defeitos: "2",
     manual: "CT-02 — Adição de itens e finalização de compra.",
-    statusManual: "Issue #7 fechada pelo grupo. Registro da execução no documento do grupo.",
-    achadoTitulo: "Defeitos DEF-02 e DEF-03", achado: "O total ignora a quantidade (35,00 na tela, 20,00 gravado). E o cliente do pedido vem do id do JSON, sem conferir com o cookie: dá para gravar pedido em nome de outro cliente.",
+    statusManual: "Responsável: Vinicius Rocha Pinheiro. Issue #7 fechada pelo grupo. O documento do caso, no formato do CT-04, não está no repositório.",
+    achadoTitulo: "Issues #21 e #22 · DEF-02 e DEF-03", achado: "O total ignora a quantidade (35,00 na tela, 20,00 gravado). E o cliente do pedido vem do id do JSON, sem conferir com o cookie: dá para gravar pedido em nome de outro cliente.",
     ref: "ComprarTest · ComprarRegrasTest · issues #2 e #7 · DEF-02, DEF-03",
-    fala1: "Minha parte é o carrinho. A classe é o servlet comprar, que tem regra de verdade: valida o cookie, lê o JSON que o carrinho.js monta, separa lanche de bebida, soma o total e grava os vínculos. Mockamos o validador e os quatro DAOs e usamos ArgumentCaptor para olhar o Pedido que chega no DAO. O valor esperado não sai do próprio código: usamos a conta que a tela do carrinho faz, preço vezes quantidade.",
-    fala2: "São 22 testes passando na suíte normal e dois testes que ficam vermelhos de propósito na suíte de defeitos. O primeiro: com 2 lanches de 15 e 1 refrigerante de 5 a tela mostra 35, mas o servlet grava 20, porque soma o preço uma vez por item. O segundo: o id do cliente vem do JSON e nunca é comparado com o cookie. Para demonstrar: mvn test -Pdefeitos -Dtest=ComprarRegrasTest.",
+    fala1: "Minha parte é o carrinho e o fechamento do pedido.\nA classe é o servlet comprar.\n[PAUSA]\nEle tem regra de verdade:\nvalida o cookie, lê o JSON que o carrinho manda,\nsepara o que é lanche e o que é bebida,\nsoma o total, e grava o pedido com os itens.\n[PAUSA]\nO detalhe importante do meu teste é esse:\neu não acredito na mensagem que o sistema responde.\n[PAUSA]\nEu pego o Pedido que ele manda pro banco e abro pra conferir.\nO total, o cliente, a quantidade de cada item.\n[PAUSA]\nPorque dá pra um teste passar só olhando\na mensagem Pedido salvo com sucesso,\ne o pedido estar todo errado por dentro.",
+    fala2: "22 testes passando.\nE dois vermelhos de propósito. Já explico o porquê.\n[PAUSA]\nPõe no carrinho dois lanches de quinze reais\ne um refrigerante de cinco.\nA tela mostra trinta e cinco.\n[PAUSA]\nO que o sistema grava no banco? Vinte.\n[PAUSA]\nEle soma o preço uma vez por item e ignora a quantidade.\nNa prática: quanto mais você compra, mais barato fica.\nEssa é a issue vinte e um.\n[PAUSA]\nE tem outra, a vinte e dois, que é pior.\nO id do cliente vem do JSON que o navegador manda.\nO sistema nunca compara com o cookie de quem está logado.\n[PAUSA]\nEntão eu, logado na minha conta,\nconsigo fazer um pedido no nome de qualquer um de vocês.",
   },
   {
-    n: 3, area: "Cadastro de clientes", quem: "Felipe Paixão",
+    n: 3, area: "Cadastro de clientes", quem: "Thiago Ferreira",
     classe: "DAO.DaoCliente + Controllers.cadastro + Helpers.EncryptadorMD5", metodos: "login, salvar, pesquisaPorUsuario · processRequest · encryptar",
     naoCrud: "login decide o acesso (hash MD5 igual E cliente ativo); salvar reaproveita endereço já existente. cadastro e EncryptadorMD5 não são DAO nem entidade.",
     estrategia: "Connection e DaoEndereco injetados por construtor (sem Objenesis/reflexão). Hash esperado vem da RFC 1321, não do próprio sistema.",
@@ -87,11 +87,11 @@ const AREAS = [
     codigo: ["// senha correta, mas fg_ativo = 0", "bancoRespondeClienteDoLogin(", "  \"carlos.silva\", MD5_DE_123456, 0);", "", "assertFalse(dao.login(", "  tentativaDeLogin(\"carlos.silva\", \"123456\")));"],
     testes: "29", cobertura: "13/16", defeitos: "1",
     manual: "CT-03 — Validações no cadastro de usuário (campos obrigatórios, duplicados).",
-    statusManual: "Issue #8 aberta: execução manual pendente.",
-    achadoTitulo: "Defeitos DEF-05 e DEF-04", achado: "Servidor aceita nome, usuário e senha vazios; em cadastro.js a condição !field.name == 'complemento' é sempre falsa. E pesquisaPorUsuario concatena SQL: usuário com apóstrofo quebra o comando.",
+    statusManual: "Responsável: Thiago Ferreira. Não executado — issue #8 aberta. Roteiro pronto: campos obrigatórios vazios e usuário duplicado, cenários que os testes já reprovam.",
+    achadoTitulo: "Issues #24 e #23 · DEF-05 e DEF-04", achado: "Servidor aceita nome, usuário e senha vazios; em cadastro.js a condição !field.name == 'complemento' é sempre falsa. E pesquisaPorUsuario concatena SQL: usuário com apóstrofo quebra o comando.",
     ref: "DaoClienteTest · CadastroTest · EncryptadorMD5Test · issues #3 e #8 · DEF-04, DEF-05",
-    fala1: "Minha parte é o cadastro de clientes. O DaoCliente é um DAO, mas o login tem uma decisão: só entra se o hash MD5 bater e o cliente estiver ativo. E o salvar reaproveita um endereço que já existe. Completamos com duas classes que não são CRUD: o servlet cadastro e o EncryptadorMD5. Simplificamos o teste antigo, que usava Objenesis e reflexão, para injeção por construtor. O hash esperado vem dos vetores da RFC, inclusive o MD5 de 'a', que começa com zero e testa o preenchimento.",
-    fala2: "São 29 testes passando. Defeitos: o servidor grava cliente com nome, usuário e senha vazios, e a validação da tela também não funciona por causa de uma condição sempre falsa no JavaScript. Outro: a busca por usuário concatena texto no SQL, então um apóstrofo quebra o login. O MD5 foi tratado como comportamento legado, só caracterizamos. O CT-03 manual ainda está pendente, issue 8.",
+    fala1: "Minha parte é o cadastro e o login do cliente.\nSão três classes: o DaoCliente, o servlet de cadastro e o EncryptadorMD5.\n[PAUSA]\nO DaoCliente é um DAO, então tem bastante CRUD nele.\nMas o método login tem uma decisão de verdade:\nsó entra se o hash da senha bater\ne se o cliente estiver ativo.\n[PAUSA]\nUma coisa que a gente mudou e que vale comentar:\no teste que já existia usava Objenesis e reflexão\npra conseguir enfiar um banco falso dentro da classe.\nFuncionava, mas ninguém entendia ao ler.\n[PAUSA]\nA gente trocou por um construtor normal, que recebe a conexão.\nFicou bem mais simples.\n[PAUSA]\nE o hash esperado a gente não tirou do próprio sistema.\nSe o sistema estiver errado, o teste erraria junto.\nPegamos da tabela oficial do MD5.",
+    fala2: "29 testes passando.\nE aqui aparecem dois problemas.\n[PAUSA]\nO primeiro: o cadastro aceita campo vazio.\nNome vazio, usuário vazio, senha vazia.\nO servidor grava e responde Usuário cadastrado.\n[PAUSA]\nAí vocês perguntam: mas a tela não valida?\nNão valida.\n[PAUSA]\nTem um if no JavaScript escrito errado,\nque nunca é verdadeiro.\nEntão aquele alerta de campo obrigatório nunca aparece.\nEssa é a issue vinte e quatro.\n[PAUSA]\nO segundo é a busca por usuário.\nEla monta o SQL colando texto.\n[PAUSA]\nEntão se a pessoa se chama O'Brien, com apóstrofo, o login quebra.\nE se ela for esperta, digita SQL no campo de usuário\ne o banco executa.\nIssue vinte e três.",
   },
   {
     n: 4, area: "Cardápio e montagem de lanches", quem: "Vinicius Fonseca de Freitas",
@@ -102,14 +102,14 @@ const AREAS = [
     codigo: ["enviar(LANCHE_DA_CASA); // 3 ingredientes", "", "verify(lancheDao, times(3))", "  .vincularIngrediente(eq(lancheGravado), any());", "", "// Wanted 3 times, but was 0:", "// o Iterator ja foi consumido no", "// calculo do preco"],
     testes: "22", cobertura: "9/14", defeitos: "1",
     manual: "CT-04 — Montagem de lanche customizado.",
-    statusManual: "Executado em 20/09 por Vinicius Fonseca: passo 'Adicionar' FALHOU (nada acontece) e 'Cancelar' FALHOU. Issue #17 aberta.",
-    achadoTitulo: "Defeito DEF-01", achado: "A suspeita de 'ingredientes não salvos' não está no DaoLanche (o INSERT é executado). Está no servlet: o mesmo Iterator é usado em dois laços, e o segundo nunca roda.",
+    statusManual: "Executado em 20/09 por Vinicius Fonseca: passo 'Adicionar' FALHOU (nada acontece) e 'Cancelar' FALHOU. Virou a issue #17; a causa está na #20.",
+    achadoTitulo: "Issue #20 · DEF-01", achado: "A suspeita de 'ingredientes não salvos' não está no DaoLanche (o INSERT é executado). Está no servlet: o mesmo Iterator é usado em dois laços, e o segundo nunca roda.",
     ref: "DaoLancheTest · SalvarLancheClienteTest · issues #4, #9 e #17 · DEF-01",
-    fala1: "Minha parte é a montagem de lanches. O DaoLanche é CRUD, então a regra que escolhemos está no servlet salvarLancheCliente: ele calcula o preço somando valor de venda vezes quantidade de cada ingrediente, grava o lanche como inativo e deveria vincular os ingredientes. O teste calcula o preço esperado à mão: 2 queijos, 3 bacons e 1 pão dá 18,50.",
-    fala2: "Tínhamos uma suspeita de que os ingredientes não eram salvos. Investigamos: o DaoLanche faz o INSERT normalmente. O problema é no servlet, que usa o mesmo Iterator em dois laços; o primeiro consome tudo e o segundo nunca executa. O teste espera 3 vínculos e recebe zero. No teste manual CT-04, feito em 20 de setembro, o botão Adicionar não respondeu, e isso virou a issue 17. Demonstração: mvn test -Pdefeitos -Dtest=SalvarLancheClienteTest.",
+    fala1: "Minha parte é a montagem do lanche personalizado.\nAquela tela onde o cliente escolhe pão, carne, queijo, bacon.\n[PAUSA]\nO DaoLanche é CRUD puro,\nentão a regra que eu testei está no servlet.\n[PAUSA]\nEle faz três coisas:\ncalcula o preço somando ingrediente por ingrediente,\nsalva o lanche como inativo, porque não é do cardápio,\ne liga cada ingrediente ao lanche.\n[PAUSA]\nNo teste eu faço a conta na mão:\ndois queijos, três bacons e um pão dá dezoito e cinquenta.\n[PAUSA]\nSe eu deixasse o teste usar a conta do próprio código,\no código poderia mudar e o teste mudaria junto, sem reclamar.\nFazendo na mão, ele reclama.",
+    fala2: "Esse slide é o meu favorito.\n[PAUSA]\nA gente já desconfiava que os ingredientes não estavam sendo salvos.\nE a suspeita era do DaoLanche.\n[PAUSA]\nFomos olhar: o DaoLanche está certo.\nEle executa o INSERT normalmente.\n[PAUSA]\nO problema está no servlet.\nTem dois laços lá, um embaixo do outro, usando o mesmo Iterator.\n[PAUSA]\nO primeiro laço, o do preço, consome tudo.\nQuando chega no segundo, o que liga os ingredientes,\nnão sobrou nada. Ele simplesmente não roda.\n[PAUSA]\nO teste esperava três ingredientes ligados ao lanche.\nRecebeu zero.\n[PAUSA]\nE olha que interessante: isso bate com o teste manual.\nDia vinte eu montei um lanche na mão,\ncliquei em Adicionar, e não aconteceu nada.\nVirou a issue dezessete.\nAgora a gente sabe o motivo, que é a issue vinte.",
   },
   {
-    n: 5, area: "Insumos e estoque", quem: "Thiago Ferreira",
+    n: 5, area: "Insumos e estoque", quem: "Felipe Paixão",
     classe: "DAO.DaoIngrediente + Controllers.salvarIngrediente / alterarIngrediente", metodos: "salvar, alterar, remover, listarTodosPorLanche, pesquisaPorNome · processRequest",
     naoCrud: "Lacuna assumida: DaoIngrediente é CRUD e o sistema não tem regra de estoque (não há baixa na compra). Melhor alternativa: os servlets, que autorizam o funcionário e interpretam o JSON.",
     estrategia: "Connection injetada; um caso feliz e um de falha por operação. Nos servlets: autorizado, não autorizado, quantidade inválida, valores negativos.",
@@ -117,11 +117,11 @@ const AREAS = [
     codigo: ["when(validadorCookie.validarFuncionario(any()))", "  .thenReturn(false);", "", "cadastroDeInsumo.processRequest(request, response);", "", "assertEquals(\"erro\", resposta.toString().trim());", "verifyNoInteractions(ingredienteDao);"],
     testes: "16", cobertura: "6/6", defeitos: "1",
     manual: "CT-05 — Gestão de insumos e atualização de estoque (inclui entradas negativas).",
-    statusManual: "Issue #10 aberta: execução manual pendente.",
-    achadoTitulo: "Defeito DEF-07", achado: "Quantidade -5 e valores negativos são aceitos: 'Ingrediente Salvo!'. Não há validação no servlet nem CHECK no banco. Não assumimos regra de 'venda maior que compra'.",
+    statusManual: "Responsável: Felipe Paixão. Não executado — issue #10 aberta. Roteiro pronto: cadastrar insumo com quantidade -5 e zerar o estoque pelo painel.",
+    achadoTitulo: "Issue #25 · DEF-07", achado: "Quantidade -5 e valores negativos são aceitos: 'Ingrediente Salvo!'. Não há validação no servlet nem CHECK no banco. Não assumimos regra de 'venda maior que compra'.",
     ref: "DaoIngredienteTest · IngredienteControllersTest · issues #5 e #10 · DEF-07",
-    fala1: "Minha parte é insumos e estoque. Aqui somos transparentes: o DaoIngrediente é CRUD e o sistema não tem regra de estoque, a compra nem dá baixa. Então cobrimos o DAO, que era a issue 5, e escolhemos como classe não CRUD os servlets de insumo, que verificam se quem chama é funcionário e convertem o JSON. Mostramos que um token de cliente não entra no painel.",
-    fala2: "São 16 testes passando e os 6 ramos do DAO cobertos. O defeito: quantidade e valores negativos são aceitos e gravados, sem validação no servlet nem restrição no banco. Não afirmamos que o preço de venda precisa ser maior que o de compra, porque nada no sistema sustenta essa regra. O CT-05 manual ainda está pendente, issue 10.",
+    fala1: "Minha parte é estoque e insumos.\nE eu vou ser honesto com vocês sobre uma coisa.\n[PAUSA]\nO requisito pedia uma classe que não fosse CRUD,\ncom uma complexidade razoável.\nNa minha área, essa classe não existe.\n[PAUSA]\nO DaoIngrediente é CRUD do começo ao fim.\nE o sistema não tem regra de estoque nenhuma:\nquando alguém compra, o estoque não baixa.\n[PAUSA]\nEntão a gente fez duas coisas.\nCobriu o DAO, que era o que a issue cinco pedia.\nE pegou como classe não CRUD os servlets do painel,\nque pelo menos decidem quem pode entrar e quem não pode.\n[PAUSA]\nEssa é a limitação do nosso trabalho, e ela está escrita no slide.\nA gente preferiu deixar visível\na inventar uma classe só pra fechar cinco nomes.",
+    fala2: "16 testes passando.\n[PAUSA]\nO defeito daqui: o painel aceita número negativo.\n[PAUSA]\nCadastra um insumo com quantidade menos cinco, ele aceita.\nPreço de compra negativo, aceita também.\nE responde Ingrediente salvo.\n[PAUSA]\nNão tem validação no servlet,\ne o banco também não tem restrição nenhuma.\nIssue vinte e cinco.\n[PAUSA]\nE tem uma coisa que a gente decidiu não fazer.\n[PAUSA]\nNão escrevemos teste dizendo\nque preço de venda tem que ser maior que o de compra.\nParece óbvio, mas não existe nada no sistema que diga isso.\nA gente testa o que está escrito, não o que a gente acha.",
   },
 ];
 
@@ -134,8 +134,8 @@ const AREAS = [
   texto(s, "QUALIDADE E TESTE DE SOFTWARE  ·  ENTREGA 1", { x: 0.6, y: 0.9, w: 6.2, h: 0.3, fontSize: 12, color: COR.mostarda, charSpacing: 3 });
   texto(s, "Code Burguer's", { x: 0.6, y: 1.35, w: 6.4, h: 0.9, fontSize: 48, bold: true, color: COR.branco, fontFace: "Cambria" });
   texto(s, "Plano de teste, testes unitários e testes manuais de uma lanchonete online em Java (Servlets + JDBC + PostgreSQL)", { x: 0.6, y: 2.35, w: 6.0, h: 0.9, fontSize: 16, color: "E8DFDB" });
-  texto(s, "Yuri Mascarenhas · Vinicius Rocha Pinheiro · Felipe Paixão · Vinicius Fonseca de Freitas · Thiago Ferreira", { x: 0.6, y: 4.3, w: 6.2, h: 0.6, fontSize: 12, color: "E8DFDB" });
-  s.addNotes("Abertura. O sistema é o Code Burguer's, uma lanchonete online em Java com Servlets e JDBC, baseado no projeto APS-04. Dividimos em cinco áreas, uma por integrante: cada um apresenta a classe que testou, a estratégia, o resultado e o que encontrou.");
+  texto(s, "Yuri Mascarenhas · Vinicius Rocha Pinheiro · Thiago Ferreira · Vinicius Fonseca de Freitas · Felipe Paixão", { x: 0.6, y: 4.3, w: 6.2, h: 0.6, fontSize: 12, color: "E8DFDB" });
+  s.addNotes("Boa noite, pessoal.\nA gente é o grupo do Code Burguer's.\nÉ um sistema de lanchonete online, feito em Java, com Servlet e JDBC.\n[PAUSA]\nSó que não fomos nós que escrevemos esse sistema.\nEle veio pronto, de um projeto antigo.\nO nosso trabalho foi outro: testar ele.\nE achar o que está quebrado.\n[PAUSA]\nA gente dividiu em cinco áreas, uma pra cada um.\nCada pessoa tem dois slides:\no que testou, e o que encontrou.\nAdianto que encontramos bastante coisa.");
 }
 
 // 2 a 11. Dois slides por integrante
@@ -156,10 +156,11 @@ AREAS.forEach((a) => {
   numero(s2, 0.5, 3.85, a.defeitos, "teste(s) vermelho(s) na suíte de defeitos", a.defeitos === "0" ? COR.texto : COR.tomate);
   cartao(s2, 3.0, 1.3, 3.1, 3.7);
   bloco(s2, 3.2, 1.5, 2.7, "Cenário manual", a.manual, 1.1);
-  bloco(s2, 3.2, 3.0, 2.7, "Situação", a.statusManual, 1.8);
+  bloco(s2, 3.2, 2.9, 2.7, "Situação", a.statusManual, 1.75);
   cartao(s2, 6.4, 1.3, 3.1, 3.7, COR.fundo);
-  texto(s2, a.achadoTitulo.toUpperCase(), { x: 6.6, y: 1.5, w: 2.7, h: 0.25, fontSize: 10, bold: true, color: COR.mostarda, charSpacing: 1 });
-  texto(s2, a.achado, { x: 6.6, y: 1.85, w: 2.7, h: 3.0, fontSize: 13, color: COR.branco });
+  texto(s2, a.achadoTitulo.toUpperCase(), { x: 6.6, y: 1.5, w: 2.7, h: 0.5, fontSize: 9.5, bold: true, color: COR.mostarda, charSpacing: 1 });
+  texto(s2, "Área de " + a.quem, { x: 6.6, y: 2.05, w: 2.7, h: 0.3, fontSize: 10, italic: true, color: "E8DFDB" });
+  texto(s2, a.achado, { x: 6.6, y: 2.45, w: 2.7, h: 2.4, fontSize: 12.5, color: COR.branco });
   rodape(s2, "Sem testes de integração nesta entrega  ·  " + a.ref);
   s2.addNotes(a.fala2);
 });
@@ -169,20 +170,20 @@ AREAS.forEach((a) => {
   const s = pres.addSlide();
   s.background = { color: COR.fundo };
   texto(s, "Encerramento", { x: 0.6, y: 0.45, w: 8.8, h: 0.6, fontSize: 32, bold: true, color: COR.branco, fontFace: "Cambria" });
-  const destaques = [["115", "testes unitários\n0 falhas (mvn clean test)", COR.mostarda], ["5", "testes vermelhos na suíte\n-Pdefeitos, um por defeito", COR.tomate], ["6", "defeitos documentados\nDEF-01 a 05 e DEF-07", COR.branco]];
+  const destaques = [["115", "testes unitários\n0 falhas (mvn clean test)", COR.mostarda], ["5", "testes vermelhos na suíte\n-Pdefeitos, um por defeito", COR.tomate], ["6", "defeitos documentados\nissues #20 a #25 no GitHub", COR.branco]];
   destaques.forEach((d, i) => {
     texto(s, d[0], { x: 0.6 + i * 3.0, y: 1.25, w: 2.7, h: 0.8, fontSize: 48, bold: true, color: d[2], fontFace: "Cambria" });
     texto(s, d[1], { x: 0.6 + i * 3.0, y: 2.05, w: 2.7, h: 0.6, fontSize: 12, color: "E8DFDB" });
   });
   texto(s, "PENDÊNCIAS E LIMITES", { x: 0.6, y: 3.0, w: 8.8, h: 0.25, fontSize: 10, bold: true, color: COR.mostarda, charSpacing: 1 });
   texto(s, [
-    { text: "Testes manuais CT-03 e CT-05 ainda não executados; CT-04 executado com falha (issue #17).", options: { bullet: true, breakLine: true } },
+    { text: "CT-03 (Thiago Ferreira) e CT-05 (Felipe Paixão) ainda não executados; CT-04 executado por Vinicius Fonseca com falha.", options: { bullet: true, breakLine: true } },
     { text: "Área 5 sem classe não CRUD de complexidade razoável: o sistema não tem regra de estoque.", options: { bullet: true, breakLine: true } },
     { text: "Nenhum defeito foi corrigido: o objetivo foi encontrar, reproduzir e registrar.", options: { bullet: true, breakLine: true } },
     { text: "Cobertura mede o que foi exercitado, não ausência de defeitos.", options: { bullet: true } },
   ], { x: 0.6, y: 3.3, w: 8.8, h: 1.6, fontSize: 13, color: COR.branco, paraSpaceAfter: 4 });
   texto(s, "Maven 3.8.4 · OpenJDK 1.8.0_322 · JUnit 5.8.2 · Mockito 4.6.1 · JaCoCo 0.8.11 · execução de 21/09/2026 · docs/entrega-1/README.md", { x: 0.6, y: 5.15, w: 8.8, h: 0.25, fontSize: 9, color: "B9ABA5" });
-  s.addNotes("Fechamento. A suíte tem 115 testes unitários passando. Separamos 5 testes que descrevem o comportamento correto e ficam vermelhos enquanto os defeitos existirem; eles rodam com mvn test -Pdefeitos. No total documentamos 6 defeitos. Sendo honestos sobre os limites: dois testes manuais ainda não foram executados, a área de estoque não tem uma classe de regra de negócio porque o sistema não tem essa regra, e não corrigimos nenhum defeito, porque o objetivo da entrega era testar e reportar.");
+  s.addNotes("Fechando.\n[PAUSA]\n115 testes rodando, todos passando.\n[PAUSA]\nMais cinco testes que ficam vermelhos de propósito.\nEles descrevem como deveria funcionar,\ne falham enquanto o defeito existir.\n[PAUSA]\nE seis defeitos abertos no GitHub, da issue vinte até a vinte e cinco.\n[PAUSA]\nO que ficou faltando, e a gente não vai esconder:\ndois testes manuais ainda não rodaram, o CT-03 e o CT-05.\nA área de estoque ficou sem classe de regra de negócio,\ncomo eu mostrei ali atrás.\nE a gente não corrigiu nenhum defeito,\nporque o objetivo dessa entrega era encontrar e registrar.\n[PAUSA]\nUma última coisa, porque é fácil confundir:\ncobertura alta não quer dizer que não tem defeito.\nQuer dizer só que aquele trecho foi executado.\n[PAUSA]\nTanto é que a gente tem cobertura alta e seis defeitos.\n[PAUSA]\nÉ isso. Obrigado, e a gente está aberto pra perguntas.");
 }
 
 pres.writeFile({ fileName: path.join(__dirname, "apresentacao-entrega-1.pptx") }).then((f) => console.log("gerado:", path.basename(f)));
