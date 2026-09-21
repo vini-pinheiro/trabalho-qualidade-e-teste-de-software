@@ -345,4 +345,35 @@ AREAS.forEach((a) => {
   s.addNotes("Anexo. Essa é a saída real do Maven. Em cima, a suíte padrão: 115 testes, zero falhas. Embaixo, o perfil de defeitos, com os cinco testes vermelhos e o nome de cada um. Dá pra rodar os dois comandos na hora, se quiserem ver.");
 }
 
+// 21. Uso de ferramentas de IA
+{
+  const s = pres.addSlide();
+  cabecalhoAnexo(s, "Onde as ferramentas de IA aceleraram o trabalho",
+    "Registros em docs/ai: um arquivo por integrante, com prompt, decisão e validação");
+  texto(s, "POR INTEGRANTE", { x: 0.5, y: 1.42, w: 4.6, h: 0.22, fontSize: 10, bold: true, color: COR.tomate, charSpacing: 1 });
+  texto(s, [
+    { text: "Vinicius Rocha Pinheiro — Gemini (Antigravity): injeção de dependência, JUnit 5 e Mockito, complexidade ciclomática.", options: { bullet: true, breakLine: true } },
+    { text: "Vinicius Fonseca — Gemini: geração dos testes do DaoLanche a partir da classe.", options: { bullet: true, breakLine: true } },
+    { text: "Felipe Paixão — Claude Code: testes das cinco áreas, investigação de defeitos, relatório e slides.", options: { bullet: true, breakLine: true } },
+    { text: "Yuri Mascarenhas e Thiago Ferreira — registro ainda a preencher pelos autores.", options: { bullet: true } },
+  ], { x: 0.5, y: 1.68, w: 4.6, h: 2.5, fontSize: 12, paraSpaceAfter: 7 });
+  texto(s, "Ganho concreto: a suíte saiu de 37 para 115 testes e o relatório, os casos e os slides foram gerados por script, a partir da execução real.",
+        { x: 0.5, y: 4.3, w: 4.6, h: 0.75, fontSize: 11.5 });
+  cartao(s, 5.3, 1.4, 4.2, 3.6, COR.fundo);
+  texto(s, "O QUE A FERRAMENTA NÃO RESOLVEU", { x: 5.5, y: 1.6, w: 3.8, h: 0.24, fontSize: 10, bold: true, color: COR.mostarda, charSpacing: 1 });
+  texto(s, [
+    { text: "Os 5 defeitos mais graves só apareceram nos testes manuais, feitos por pessoas na aplicação.", options: { bullet: true, breakLine: true } },
+    { text: "Sugeriu testar \"venda maior que compra\": rejeitado, a regra não existe no sistema.", options: { bullet: true, breakLine: true } },
+    { text: "Montou testes de integração que o grupo removeu, por estarem fora do escopo.", options: { bullet: true, breakLine: true } },
+    { text: "A suspeita sobre o DaoLanche só caiu depois de ler o código: o defeito estava no servlet.", options: { bullet: true } },
+  ], { x: 5.5, y: 1.92, w: 3.8, h: 2.9, fontSize: 11.5, color: COR.branco, paraSpaceAfter: 7 });
+  texto(s, "Não medimos horas. O que dá para mostrar é o que foi gerado, o que foi alterado e o que foi rejeitado — cada linha está em docs/ai.",
+        { x: 0.5, y: 5.15, w: 9, h: 0.4, fontSize: 11 });
+  s.addNotes("Anexo sobre uso de IA. Cada um tem seu registro em docs/ai, com o prompt, a decisão e como validou. "
+    + "As ferramentas foram diferentes: Gemini, Antigravity e Claude Code. Onde acelerou de verdade foi em gerar a primeira versão "
+    + "dos testes, configurar a stack e montar documentação. Mas vale dizer o outro lado: os defeitos mais graves não vieram da IA, "
+    + "vieram dos testes manuais que a gente executou na mão. E em alguns pontos a gente rejeitou o que a ferramenta sugeriu, "
+    + "como testar uma regra de negócio que não existe no sistema. Não medimos horas economizadas, então não vamos inventar um número.");
+}
+
 pres.writeFile({ fileName: path.join(__dirname, "apresentacao-entrega-1.pptx") }).then((f) => console.log("gerado:", path.basename(f)));

@@ -35,8 +35,8 @@ PARTES = [
     ([14, 15, 16], "Felipe Paixão", "Gestão de estoque e insumos", "4 min",
      "IngredienteControllersTest (deveBloquearQuemNaoEhFuncionario e caracterizacaoValoresNegativosSaoAceitos)"),
     ([17], "Felipe Paixão", "Encerramento", "1 min", "mvn clean test · mostrar 'Tests run: 115, Failures: 0'"),
-    ([18, 19, 20], "Qualquer um do grupo", "Anexos — só se perguntarem", "reserva",
-     "Estrutura no repositório, issues no GitHub e a saída das duas suítes"),
+    ([18, 19, 20, 21], "Qualquer um do grupo", "Anexos — só se perguntarem", "reserva",
+     "Estrutura no repositório, issues no GitHub, a saída das duas suítes e os registros em docs/ai"),
 ]
 
 PERGUNTAS = [
@@ -132,7 +132,7 @@ def main():
 
     historia = [
         Paragraph("Roteiro da apresentação", e["titulo"]),
-        Paragraph("Code Burguer's · Qualidade e Teste de Software · Entrega 1 · 20 slides, cerca de 22 minutos", e["sub"]),
+        Paragraph("Code Burguer's · Qualidade e Teste de Software · Entrega 1 · 21 slides, cerca de 22 minutos", e["sub"]),
         Spacer(1, 14),
     ]
 
