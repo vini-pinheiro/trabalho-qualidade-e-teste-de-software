@@ -2,8 +2,12 @@
 
 ## Documentos
 - [Plano de Testes](https://docs.google.com/document/d/1MT2I238OlATRWofvbea8ut1F0oSDA92Siztl87TmjpI/edit?usp=drive_link)
-- [Casos de Testes](https://docs.google.com/document/d/1mvKbYUuk7sZEFDQK1972yOiuNHJiZ4uonLA_VkpjhHU/edit?usp=drive_link)
-
+- Casos de Testes:
+   - [Caso de Teste 1 - Yuri](docs/CT-01-Autenticacao-Yuri-Mascarenhas.pdf)
+   - [Caso de Teste 2 - Vinicius Pinheiro](docs/CT-02-Carrinho-e-Compra-Vinicius-Rocha-Pinheiro.pdf)
+   - [Caso de Teste 3 - Thiago](docs/CT-03-Cadastro-de-Cliente-Thiago-Ferreira.pdf)
+   - [Caso de Teste 4 - Vinicius Fonseca](docs/CT-04-Montagem-de-Lanche-Vinicius-Fonseca.pdf)
+   - [Caso de Teste 5 - Felipe](docs/CT-05-Insumos-e-Estoque-Felipe-Paixao.pdf)
 ## Sobre
 Com o objetivo de desenvolver a capacidade dos alunos e obter nota na disciplina APS (Atividades Práticas Supervisionadas), 
 foi proposto um projeto de desenvolvimento de um sistema para uma lanchonete online, onde o administrador consiga controlar 
