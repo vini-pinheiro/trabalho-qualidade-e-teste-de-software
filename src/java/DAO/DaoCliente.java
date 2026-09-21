@@ -20,9 +20,17 @@ import java.util.List;
 public class DaoCliente {
 
     private Connection conecta;
+    // Nulo no uso normal: salvar() continua criando o DaoEndereco sob demanda
+    private DaoEndereco enderecoDao;
     
     public DaoCliente(){
         this.conecta = new DaoUtil().conecta();
+    }
+
+    // Permite testar o DAO sem banco real, inclusive o DaoEndereco usado em salvar()
+    public DaoCliente(Connection conecta, DaoEndereco enderecoDao){
+        this.conecta = conecta;
+        this.enderecoDao = enderecoDao;
     }
     
     public void salvar(Cliente cliente){
@@ -40,7 +48,7 @@ public class DaoCliente {
             stmt.setString(4, cliente.getUsuario());
             stmt.setString(5, cliente.getSenha());
             stmt.setInt(6, cliente.getFg_ativo());
-            DaoEndereco dend = new DaoEndereco();
+            DaoEndereco dend = (enderecoDao != null) ? enderecoDao : new DaoEndereco();
             if(dend.validaEndereco(cliente.getEndereco()) == 0){
                 dend.salvar(cliente.getEndereco());
                 stmt.setInt(7, dend.validaEndereco(cliente.getEndereco()));

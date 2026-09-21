@@ -21,6 +21,11 @@ public class DaoEndereco {
     public DaoEndereco() {
         this.conecta = new DaoUtil().conecta();
     }
+
+    // Permite testar o DAO com uma conexão controlada, sem depender do DaoUtil
+    public DaoEndereco(Connection conecta) {
+        this.conecta = conecta;
+    }
     
     public void salvar(Endereco endereco){
         String sql = "INSERT INTO tb_enderecos(rua, bairro, numero, complemento, cidade, estado) "

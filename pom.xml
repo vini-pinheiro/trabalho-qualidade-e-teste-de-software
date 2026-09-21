@@ -12,6 +12,10 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jacoco.version>0.8.11</jacoco.version>
+        <!-- Testes marcados com @Tag("defeito-conhecido") ficam fora da suíte padrão; ver perfil "defeitos" -->
+        <grupos.incluidos></grupos.incluidos>
+        <grupos.excluidos>defeito-conhecido</grupos.excluidos>
     </properties>
 
     <dependencies>
@@ -132,7 +136,44 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.2</version>
+                <configuration>
+                    <groups>${grupos.incluidos}</groups>
+                    <excludedGroups>${grupos.excluidos}</excludedGroups>
+                </configuration>
+            </plugin>
+            <!-- Cobertura dos testes unitários: target/site/jacoco -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-unitarios-agente</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-unitarios-relatorio</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Suíte de defeitos conhecidos: fica vermelha enquanto os defeitos estiverem abertos.
+             mvn -Pdefeitos test -->
+        <profile>
+            <id>defeitos</id>
+            <properties>
+                <grupos.incluidos>defeito-conhecido</grupos.incluidos>
+                <grupos.excluidos></grupos.excluidos>
+            </properties>
+        </profile>
+    </profiles>
 </project> 

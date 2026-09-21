@@ -24,6 +24,11 @@ public class DaoIngrediente {
     public DaoIngrediente() {
         this.conecta = new DaoUtil().conecta();
     }
+
+    // Permite testar o DAO com uma conexão controlada, sem depender do DaoUtil
+    public DaoIngrediente(Connection conecta) {
+        this.conecta = conecta;
+    }
     
     public void salvar(Ingrediente ingrediente){
         String sql = "INSERT INTO tb_ingredientes(nm_ingrediente, descricao, quantidade, valor_compra, valor_venda,"
