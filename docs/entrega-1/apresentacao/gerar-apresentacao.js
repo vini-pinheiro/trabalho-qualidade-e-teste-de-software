@@ -190,7 +190,7 @@ const CASOS_ANEXO = [
   {
     ct: "CT-03", area: "Cadastro de cliente", quem: "Thiago Ferreira", data: "21/09", passou: 2, falhou: 5,
     caso: "caso-03.png", tela: "tela-03.png",
-    legendaTela: "Tela de cadastro do sistema, com os dados usados no CT-03",
+    legendaTela: "Passo 1 do CT-03: formulário preenchido antes de clicar em Cadastrar",
     resultado: "Campos vazios aceitos, usuário duplicado aceito e acentuação corrompida.",
     issues: "Caso: #8 · defeitos: #24 e #23",
   },
