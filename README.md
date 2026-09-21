@@ -1,5 +1,49 @@
 # Trabalho da matéria de Qualidade e Teste de Software baseado no projeto APS-04-Lanchonete-Online-em-Java
 
+## Entrega 1 — apresentação
+
+[![Capa da apresentação da Entrega 1](docs/entrega-1/apresentacao/preview/capa.png)](docs/entrega-1/apresentacao/apresentacao-entrega-1.pptx)
+
+Doze slides: abertura, dois por integrante e encerramento.
+
+![Os 12 slides da apresentação](docs/entrega-1/apresentacao/preview/slides.png)
+
+- [Baixar a apresentação (.pptx)](docs/entrega-1/apresentacao/apresentacao-entrega-1.pptx)
+- [Roteiro de falas (.pdf)](docs/entrega-1/apresentacao/roteiro-apresentacao.pdf) — formato teleprompter, uma página por integrante
+- [Relatório da Entrega 1](docs/entrega-1/README.md) — comandos, resultados, cobertura e defeitos
+- [Casos de teste manuais](docs/entrega-1/casos-manuais) — um por integrante, com prints da execução
+
+### Resultado
+
+| | |
+|---|---|
+| Testes unitários | 115 executados, 115 passaram (`mvn clean test`) |
+| Suíte de defeitos conhecidos | 5 testes vermelhos, um por defeito aberto (`mvn test -Pdefeitos`) |
+| Casos manuais | 5 executados, um por integrante: 23 passos PASSOU e 13 FALHOU |
+| Defeitos | 11 encontrados, 6 já com issue aberta (#20 a #25) |
+
+### Quem fez o quê
+
+| Integrante | Módulo | Classe sob teste | Caso manual |
+|---|---|---|---|
+| Yuri Mascarenhas | Autenticação e sessão | `Helpers.ValidadorCookie` | CT-01 |
+| Vinicius Rocha Pinheiro | Carrinho, pedidos e checkout | `Controllers.comprar` | CT-02 |
+| Thiago Ferreira | Gestão de clientes e endereços | `DAO.DaoCliente`, `Controllers.cadastro`, `Helpers.EncryptadorMD5` | CT-03 |
+| Vinicius Fonseca de Freitas | Cardápio e montagem de lanches | `Controllers.salvarLancheCliente`, `DAO.DaoLanche` | CT-04 |
+| Felipe Paixão | Estoque e insumos | `DAO.DaoIngrediente`, servlets de insumo | CT-05 |
+
+### Rodar os testes
+
+```bash
+mvn clean test
+```
+
+Sem Java instalado, o mesmo comando dentro de um contêiner:
+
+```bash
+docker run --rm -v "$PWD":/app -w /app maven:3.8.4-openjdk-8 mvn -B clean test
+```
+
 ## Documentos
 - [Plano de Testes](https://docs.google.com/document/d/1MT2I238OlATRWofvbea8ut1F0oSDA92Siztl87TmjpI/edit?usp=drive_link)
 - [Casos de Testes](https://docs.google.com/document/d/1mvKbYUuk7sZEFDQK1972yOiuNHJiZ4uonLA_VkpjhHU/edit?usp=drive_link)
