@@ -10,8 +10,15 @@ import Model.Cliente;
 import Model.Lanche;
 import Model.Pedido;
 import apoio.CorpoRequisicao;
+import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import javax.servlet.ReadListener;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.JSONException;
@@ -21,17 +28,23 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +54,8 @@ import static org.mockito.Mockito.when;
  * quantidades e vínculos), e não só a mensagem de sucesso.
  *
  * Contrato de entrada (web/view/carrinho/carrinho.js):
- * {"id": idCliente, "Nome do item": [precoUnitario, "lanche"|"bebida", quantidade]}
+ * {"id": idCliente, "Nome do item": [precoUnitario, "lanche"|"bebida",
+ * quantidade]}
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -276,10 +290,228 @@ class ComprarRegrasTest {
                 .when(pedidoDao).vincularBebida(any(), any());
 
         assertThrows(RuntimeException.class,
-                () -> enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", \"1\"], \"Refrigerante\": [\"5.00\", \"bebida\", \"1\"]}"));
+                () -> enviar(
+                        "{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", \"1\"], \"Refrigerante\": [\"5.00\", \"bebida\", \"1\"]}"));
 
         // Não há transação: pedido e lanche ficam gravados sem a bebida
         verify(pedidoDao).salvar(any(Pedido.class));
         verify(pedidoDao).vincularLanche(pedidoGravado, xBurger);
+    }
+
+    private ServletInputStream streamParaEncodingDoHost(String jsonUtf8) {
+        // Simula o comportamento esperado pelo servlet: bytes UTF-8 lidos como
+        // ISO-8859-1 pelo InputStreamReader
+        String reencodado = new String(jsonUtf8.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
+        final ByteArrayInputStream bytes = new ByteArrayInputStream(reencodado.getBytes(Charset.defaultCharset()));
+
+        return new ServletInputStream() {
+            @Override
+            public int read() {
+                return bytes.read();
+            }
+
+            @Override
+            public boolean isFinished() {
+                return bytes.available() == 0;
+            }
+
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public void setReadListener(ReadListener readListener) {
+            }
+        };
+    }
+
+    @Test
+    @DisplayName("Define headers JSON UTF-8, data_pedido ISO-8601 e persiste na ordem esperada")
+    void deveConfigurarHeadersDataPedidoEOrdemDePersistencia() throws Exception {
+        Instant antes = Instant.now();
+        enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 1], \"Refrigerante\": [\"5.00\", \"bebida\", 1]}");
+        Instant depois = Instant.now();
+
+        verify(response).setContentType("application/json");
+        verify(response).setCharacterEncoding("UTF-8");
+
+        InOrder ordem = inOrder(pedidoDao);
+        ArgumentCaptor<Pedido> pedidoCaptor = ArgumentCaptor.forClass(Pedido.class);
+        ordem.verify(pedidoDao).salvar(pedidoCaptor.capture());
+        ordem.verify(pedidoDao).pesquisaPorData(any(Pedido.class));
+        ordem.verify(pedidoDao).vincularLanche(pedidoGravado, xBurger);
+        ordem.verify(pedidoDao).vincularBebida(pedidoGravado, refrigerante);
+
+        String dataPedido = pedidoCaptor.getValue().getData_pedido();
+        assertNotNull(dataPedido);
+        Instant instantePedido = assertDoesNotThrow(() -> Instant.parse(dataPedido));
+        assertFalse(instantePedido.isBefore(antes));
+        assertFalse(instantePedido.isAfter(depois));
+    }
+
+    @Test
+    @DisplayName("Múltiplos lanches e múltiplas bebidas distintos são somados e vinculados ao pedido")
+    void deveProcessarMultiplosLanchesEMultiplasBebidasDistintos() throws Exception {
+        Lanche xSalada = new Lanche();
+        xSalada.setId_lanche(5);
+        xSalada.setNome("X-Salada");
+        xSalada.setValor_venda(18.50);
+        when(lancheDao.pesquisaPorNome("X-Salada")).thenReturn(xSalada);
+
+        Bebida suco = new Bebida();
+        suco.setId_bebida(6);
+        suco.setNome("Suco");
+        suco.setValor_venda(7.50);
+        when(bebidaDao.pesquisaPorNome("Suco")).thenReturn(suco);
+
+        enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 2], \"X-Salada\": [\"18.50\", \"lanche\", 1], "
+                + "\"Refrigerante\": [\"5.00\", \"bebida\", 3], \"Suco\": [\"7.50\", \"bebida\", 2]}");
+
+        Pedido pedido = pedidoEnviadoAoDao();
+        assertEquals(46.00, pedido.getValor_total(), 0.001);
+        assertEquals(2, xBurger.getQuantidade());
+        assertEquals(1, xSalada.getQuantidade());
+        assertEquals(3, refrigerante.getQuantidade());
+        assertEquals(2, suco.getQuantidade());
+        verify(pedidoDao).vincularLanche(pedidoGravado, xBurger);
+        verify(pedidoDao).vincularLanche(pedidoGravado, xSalada);
+        verify(pedidoDao).vincularBebida(pedidoGravado, refrigerante);
+        verify(pedidoDao).vincularBebida(pedidoGravado, suco);
+        assertEquals("Pedido Salvo com Sucesso!", resposta.toString().trim());
+    }
+
+    @Test
+    @DisplayName("Repassa array de cookies válido de request.getCookies() para o validador")
+    void deveRepassarCookiesValidosAoValidador() throws Exception {
+        Cookie[] cookies = new Cookie[] { new Cookie("sessao", "token-123") };
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorCookie.validar(same(cookies))).thenReturn(true);
+
+        enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 1]}");
+
+        verify(validadorCookie).validar(same(cookies));
+        verify(pedidoDao).salvar(any(Pedido.class));
+        assertEquals("Pedido Salvo com Sucesso!", resposta.toString().trim());
+    }
+
+    @Test
+    @DisplayName("Repassa array de cookies vazio e retorna erro quando validador rejeita")
+    void deveRepassarCookiesVaziosERetornarErro() throws Exception {
+        Cookie[] cookiesVazios = new Cookie[0];
+        when(request.getCookies()).thenReturn(cookiesVazios);
+        when(validadorCookie.validar(same(cookiesVazios))).thenReturn(false);
+
+        enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 1]}");
+
+        verify(validadorCookie).validar(same(cookiesVazios));
+        verify(response).setContentType("application/json");
+        verify(response).setCharacterEncoding("UTF-8");
+        verify(pedidoDao, never()).salvar(any());
+        assertEquals("erro", resposta.toString().trim());
+    }
+
+    @Test
+    @DisplayName("Repassa cookies nulos de request.getCookies() e retorna erro quando validador rejeita")
+    void deveRepassarCookiesNulosERetornarErro() throws Exception {
+        when(request.getCookies()).thenReturn(null);
+        when(validadorCookie.validar(null)).thenReturn(false);
+
+        enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 1]}");
+
+        verify(validadorCookie).validar(null);
+        verify(pedidoDao, never()).salvar(any());
+        assertEquals("erro", resposta.toString().trim());
+    }
+
+    @Test
+    @DisplayName("Bebida inexistente no catálogo interrompe a compra antes de gravar o pedido")
+    void deveInterromperCompraQuandoBebidaNaoExiste() {
+        when(bebidaDao.pesquisaPorNome("Bebida Fantasma")).thenReturn(new Bebida());
+
+        assertThrows(NullPointerException.class,
+                () -> enviar("{\"id\": 1, \"Bebida Fantasma\": [\"6.00\", \"bebida\", 1]}"));
+
+        verify(pedidoDao, never()).salvar(any());
+    }
+
+    @Test
+    @DisplayName("Item com quantidade zero e preço 0.00 é vinculado mantendo total zerado")
+    void deveProcessarItemComQuantidadeZeroEPrecoZerado() throws Exception {
+        Lanche brinde = new Lanche();
+        brinde.setId_lanche(9);
+        brinde.setNome("Brinde");
+        brinde.setValor_venda(0.00);
+        when(lancheDao.pesquisaPorNome("Brinde")).thenReturn(brinde);
+
+        enviar("{\"id\": 1, \"Brinde\": [\"0.00\", \"lanche\", 0]}");
+
+        assertEquals(0.00, pedidoEnviadoAoDao().getValor_total(), 0.001);
+        assertEquals(0, brinde.getQuantidade());
+        verify(pedidoDao).vincularLanche(pedidoGravado, brinde);
+        assertEquals("Pedido Salvo com Sucesso!", resposta.toString().trim());
+    }
+
+    @Test
+    @DisplayName("Falha ao salvar pedido interrompe o fluxo antes de buscar por data ou vincular itens")
+    void deveInterromperFluxoQuandoSalvarFalha() {
+        doThrow(new RuntimeException("erro ao salvar pedido")).when(pedidoDao).salvar(any(Pedido.class));
+
+        assertThrows(RuntimeException.class,
+                () -> enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 1]}"));
+
+        verify(pedidoDao, never()).pesquisaPorData(any());
+        verify(pedidoDao, never()).vincularLanche(any(), any());
+        verify(pedidoDao, never()).vincularBebida(any(), any());
+    }
+
+    @Test
+    @DisplayName("Retorno nulo em pesquisaPorData interrompe antes de vincular itens")
+    void deveInterromperQuandoPesquisaPorDataRetornaNulo() {
+        when(pedidoDao.pesquisaPorData(any(Pedido.class))).thenReturn(null);
+
+        assertThrows(NullPointerException.class,
+                () -> enviar("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 1]}"));
+
+        verify(pedidoDao).salvar(any(Pedido.class));
+        verify(pedidoDao, never()).vincularLanche(any(), any());
+        verify(pedidoDao, never()).vincularBebida(any(), any());
+    }
+
+    @Test
+    @DisplayName("Fluxo completo via doPost processa o pedido e configura resposta JSON UTF-8")
+    void deveProcessarFluxoCompletoViaDoPost() throws Exception {
+        when(request.getInputStream()).thenReturn(CorpoRequisicao
+                .de("{\"id\": 1, \"X-Burger\": [\"15.00\", \"lanche\", 1], \"Refrigerante\": [\"5.00\", \"bebida\", 1]}"));
+
+        controller.doPost(request, response);
+
+        verify(response).setContentType("application/json");
+        verify(response).setCharacterEncoding("UTF-8");
+        verify(pedidoDao).salvar(any(Pedido.class));
+        verify(pedidoDao).vincularLanche(pedidoGravado, xBurger);
+        verify(pedidoDao).vincularBebida(pedidoGravado, refrigerante);
+        assertEquals("Pedido Salvo com Sucesso!", resposta.toString().trim());
+    }
+
+    @Test
+    @DisplayName("Caracteres acentuados no nome do item são preservados de forma determinística")
+    void devePreservarCaracteresAcentuadosDeFormaDeterministica() throws Exception {
+        Lanche paoDeQueijo = new Lanche();
+        paoDeQueijo.setId_lanche(12);
+        paoDeQueijo.setNome("Pão de Queijo");
+        paoDeQueijo.setValor_venda(6.50);
+        when(lancheDao.pesquisaPorNome("Pão de Queijo")).thenReturn(paoDeQueijo);
+
+        when(request.getInputStream()).thenReturn(
+                streamParaEncodingDoHost("{\"id\": 1, \"Pão de Queijo\": [\"6.50\", \"lanche\", 2]}"));
+
+        controller.processRequest(request, response);
+
+        verify(lancheDao).pesquisaPorNome("Pão de Queijo");
+        verify(pedidoDao).vincularLanche(pedidoGravado, paoDeQueijo);
+        assertEquals(6.50, pedidoEnviadoAoDao().getValor_total(), 0.001);
+        assertEquals(2, paoDeQueijo.getQuantidade());
+        assertEquals("Pedido Salvo com Sucesso!", resposta.toString().trim());
     }
 }
