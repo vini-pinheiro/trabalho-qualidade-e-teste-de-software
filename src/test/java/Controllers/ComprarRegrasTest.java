@@ -504,14 +504,14 @@ class ComprarRegrasTest {
         when(lancheDao.pesquisaPorNome("Pão de Queijo")).thenReturn(paoDeQueijo);
 
         when(request.getInputStream()).thenReturn(
-                streamParaEncodingDoHost("{\"id\": 1, \"Pão de Queijo\": [\"6.50\", \"lanche\", 2]}"));
+                streamParaEncodingDoHost("{\"id\": 1, \"Pão de Queijo\": [\"6.50\", \"lanche\", 1]}"));
 
         controller.processRequest(request, response);
 
         verify(lancheDao).pesquisaPorNome("Pão de Queijo");
         verify(pedidoDao).vincularLanche(pedidoGravado, paoDeQueijo);
         assertEquals(6.50, pedidoEnviadoAoDao().getValor_total(), 0.001);
-        assertEquals(2, paoDeQueijo.getQuantidade());
+        assertEquals(1, paoDeQueijo.getQuantidade());
         assertEquals("Pedido Salvo com Sucesso!", resposta.toString().trim());
     }
 }
