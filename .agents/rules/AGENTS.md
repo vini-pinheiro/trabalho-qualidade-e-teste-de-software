@@ -10,7 +10,7 @@
 
 ## Registro no AI-LOG
 
-- Ao concluir uma tarefa relevante (configuração, geração de testes ou refatoração), incluir no final da resposta no chat uma linha em Markdown pronta para a tabela de `docs/ai/vinicius-pinheiro/AI-LOG.md`.
-- Preencher: Responsável (`Vinícius Pinheiro`), Atividade, Ferramenta (incluindo o modelo usado), Prompt/instrução e Resultado (com métricas reais de execução).
+- Ao concluir uma tarefa relevante (configuração, geração de testes ou refatoração), incluir no final da resposta no chat uma linha em Markdown pronta para a tabela de `docs/ai/nome-sobrenome/AI-LOG.md`.
+- Preencher: Responsável (`Nome Sobrenome`), Atividade, Ferramenta (incluindo o modelo usado), Prompt/instrução e Resultado (com métricas reais de execução).
 - Nas colunas **Decisão** e **Validação**, escrever sempre `**[PENDENTE: revisão manual]**`.
 - NÃO editar `AI-LOG.md` automaticamente durante tarefas de código; só editar o arquivo quando solicitado explicitamente.
