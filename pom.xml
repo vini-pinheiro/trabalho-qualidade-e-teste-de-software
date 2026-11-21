@@ -22,6 +22,8 @@
         <!-- Testes marcados com @Tag("defeito-conhecido") ficam fora da suíte padrão; ver perfil "defeitos" -->
         <grupos.incluidos></grupos.incluidos>
         <grupos.excluidos>defeito-conhecido</grupos.excluidos>
+        <!-- Testes de integração (*IT.java) exigem PostgreSQL 13; ver perfil "integracao" -->
+        <skipITs>true</skipITs>
     </properties>
 
     <dependencies>
@@ -158,6 +160,7 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
+                    <skipITs>${skipITs}</skipITs>
                     <includes>
                         <include>**/*IT.java</include>
                     </includes>
@@ -262,6 +265,14 @@
             <properties>
                 <grupos.incluidos>defeito-conhecido</grupos.incluidos>
                 <grupos.excluidos></grupos.excluidos>
+            </properties>
+        </profile>
+        <!-- Suíte de testes de integração (*IT.java) contra PostgreSQL 13 real:
+             mvn -Pintegracao verify -->
+        <profile>
+            <id>integracao</id>
+            <properties>
+                <skipITs>false</skipITs>
             </properties>
         </profile>
     </profiles>
