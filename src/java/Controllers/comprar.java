@@ -20,18 +20,17 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -39,11 +38,13 @@ import org.json.JSONObject;
  * @author kener_000
  */
 public class comprar extends HttpServlet {
-    private ValidadorCookie validadorCookie;
-    private DaoCliente clienteDao;
-    private DaoLanche lancheDao;
-    private DaoBebida bebidaDao;
-    private DaoPedido pedidoDao;
+    private static final Logger LOGGER = Logger.getLogger(comprar.class.getName());
+
+    private final ValidadorCookie validadorCookie;
+    private final DaoCliente clienteDao;
+    private final DaoLanche lancheDao;
+    private final DaoBebida bebidaDao;
+    private final DaoPedido pedidoDao;
 
     public comprar() {
         this(new ValidadorCookie(), new DaoCliente(), new DaoLanche(), new DaoBebida(), new DaoPedido());
@@ -73,86 +74,89 @@ public class comprar extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
-        String json = "";
 
-        //////// Validar Cookie
-        boolean resultado = false;
+        if (validarCookies(request)) {
+            JSONObject dados = lerDadosJson(br);
+            Cliente cliente = this.clienteDao.pesquisaPorID(String.valueOf(dados.getInt("id")));
 
+            List<Lanche> lanches = new ArrayList<>();
+            List<Bebida> bebidas = new ArrayList<>();
+            double valorTotal = processarItens(dados, lanches, bebidas);
+
+            salvarEVincularPedido(cliente, valorTotal, lanches, bebidas);
+            escreverResposta(response, "Pedido Salvo com Sucesso!");
+        } else {
+            escreverResposta(response, "erro");
+        }
+    }
+
+    private boolean validarCookies(HttpServletRequest request) {
         try {
             Cookie[] cookies = request.getCookies();
-            ValidadorCookie validar = this.validadorCookie;
-
-            resultado = validar.validar(cookies);
-        } catch (java.lang.NullPointerException e) {
+            return this.validadorCookie.validar(cookies);
+        } catch (NullPointerException e) {
+            LOGGER.log(Level.WARNING, "Erro ao validar cookies da requisiÃ§Ã£o", e);
+            return false;
         }
-        //////////////
+    }
 
-        if ((br != null) && resultado) {
-            json = br.readLine();
-            byte[] bytes = json.getBytes(ISO_8859_1);
-            String jsonStr = new String(bytes, UTF_8);
-            JSONObject dados = new JSONObject(jsonStr);
+    private JSONObject lerDadosJson(BufferedReader br) throws IOException {
+        String json = br.readLine();
+        byte[] bytes = json.getBytes(ISO_8859_1);
+        String jsonStr = new String(bytes, UTF_8);
+        return new JSONObject(jsonStr);
+    }
 
-            DaoCliente clienteDao = this.clienteDao;
-
-            Cliente cliente = clienteDao.pesquisaPorID(String.valueOf(dados.getInt("id")));
-
-            Iterator<String> keys = dados.keys();
-
-            Double valor_total = 0.00;
-
-            List<Lanche> lanches = new ArrayList<Lanche>();
-            List<Bebida> bebidas = new ArrayList<Bebida>();
-
-            while (keys.hasNext()) {
-
-                String nome = keys.next();
-                if (!nome.equals("id")) {
-                    if (dados.getJSONArray(nome).get(1).equals("lanche")) {
-                        DaoLanche lancheDao = this.lancheDao;
-                        Lanche lanche = lancheDao.pesquisaPorNome(nome);
-                        int quantidade = dados.getJSONArray(nome).getInt(2);
-                        lanche.setQuantidade(quantidade);
-                        valor_total += lanche.getValor_venda();
-                        lanches.add(lanche);
-                    }
-                    if (dados.getJSONArray(nome).get(1).equals("bebida")) {
-                        DaoBebida bebidaDao = this.bebidaDao;
-                        Bebida bebida = bebidaDao.pesquisaPorNome(nome);
-                        int quantidade = dados.getJSONArray(nome).getInt(2);
-                        bebida.setQuantidade(quantidade);
-                        valor_total += bebida.getValor_venda();
-                        bebidas.add(bebida);
-                    }
-                }
-            }
-
-            DaoPedido pedidoDao = this.pedidoDao;
-            Pedido pedido = new Pedido();
-            pedido.setData_pedido(Instant.now().toString());
-            pedido.setCliente(cliente);
-            pedido.setValor_total(valor_total);
-            pedidoDao.salvar(pedido);
-            pedido = pedidoDao.pesquisaPorData(pedido);
-            pedido.setCliente(cliente);
-
-            System.out.println(lanches.toString());
-            for (int i = 0; i < lanches.size(); i++) {
-                pedidoDao.vincularLanche(pedido, lanches.get(i));
-            }
-            for (int i = 0; i < bebidas.size(); i++) {
-                pedidoDao.vincularBebida(pedido, bebidas.get(i));
-            }
-
-            try (PrintWriter out = response.getWriter()) {
-                out.println("Pedido Salvo com Sucesso!");
-            }
-        } else {
-            try (PrintWriter out = response.getWriter()) {
-                out.println("erro");
+    private double processarItens(JSONObject dados, List<Lanche> lanches, List<Bebida> bebidas) {
+        double valorTotal = 0.0;
+        for (String nome : dados.keySet()) {
+            if (!"id".equals(nome)) {
+                valorTotal += processarItem(nome, dados.getJSONArray(nome), lanches, bebidas);
             }
         }
+        return valorTotal;
+    }
 
+    private double processarItem(String nome, JSONArray item, List<Lanche> lanches, List<Bebida> bebidas) {
+        Object tipo = item.get(1);
+        if ("lanche".equals(tipo)) {
+            Lanche lanche = this.lancheDao.pesquisaPorNome(nome);
+            lanche.setQuantidade(item.getInt(2));
+            lanches.add(lanche);
+            return lanche.getValor_venda();
+        }
+        if ("bebida".equals(tipo)) {
+            Bebida bebida = this.bebidaDao.pesquisaPorNome(nome);
+            bebida.setQuantidade(item.getInt(2));
+            bebidas.add(bebida);
+            return bebida.getValor_venda();
+        }
+        return 0.0;
+    }
+
+    private void salvarEVincularPedido(Cliente cliente, double valorTotal, List<Lanche> lanches,
+            List<Bebida> bebidas) {
+        Pedido pedido = new Pedido();
+        pedido.setData_pedido(Instant.now().toString());
+        pedido.setCliente(cliente);
+        pedido.setValor_total(valorTotal);
+        this.pedidoDao.salvar(pedido);
+
+        Pedido pedidoSalvo = this.pedidoDao.pesquisaPorData(pedido);
+        pedidoSalvo.setCliente(cliente);
+
+        for (Lanche lanche : lanches) {
+            this.pedidoDao.vincularLanche(pedidoSalvo, lanche);
+        }
+        for (Bebida bebida : bebidas) {
+            this.pedidoDao.vincularBebida(pedidoSalvo, bebida);
+        }
+    }
+
+    private void escreverResposta(HttpServletResponse response, String mensagem) throws IOException {
+        try (PrintWriter out = response.getWriter()) {
+            out.println(mensagem);
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the
@@ -162,13 +166,14 @@ public class comprar extends HttpServlet {
      *
      * @param request  servlet request
      * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
      */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            processRequest(request, response);
+        } catch (ServletException | IOException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao processar requisiÃ§Ã£o GET", e);
+        }
     }
 
     /**
@@ -176,13 +181,14 @@ public class comprar extends HttpServlet {
      *
      * @param request  servlet request
      * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException      if an I/O error occurs
      */
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            processRequest(request, response);
+        } catch (ServletException | IOException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao processar requisiÃ§Ã£o POST", e);
+        }
     }
 
     /**
