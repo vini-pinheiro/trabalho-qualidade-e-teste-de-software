@@ -128,13 +128,52 @@ O módulo Lanche contempla:
 
 ## 4. Matriz de Rastreabilidade
 
-| Classe / componente | Requisitos relacionados |
+A matriz abaixo relaciona cada requisito aos arquivos que o implementam e aos
+arquivos que efetivamente o validam. `Parcial` indica que existe cobertura para
+uma parte do fluxo ou que o requisito é atendido pelo serviço, mas não pelo
+servlet legado. `Não atendido` indica que há um teste de caracterização ou uma
+evidência de que o comportamento atual viola o requisito.
+
+### 4.1. Requisitos funcionais
+
+| Requisito | Implementação | Validação | Situação |
+|---|---|---|---|
+| RF-LAN-001 a RF-LAN-002 | `src/java/DAO/DaoLanche.java` (`salvar`) | `src/test/java/DAO/DaoLancheTest.java` (`deveSalvarLancheAtivo`, `deveSalvarLancheClienteERetornarId`) | Validado |
+| RF-LAN-003 | `src/java/DAO/DaoLanche.java` (`salvarCliente`), `src/java/Controllers/salvarLancheCliente.java` | `src/test/java/DAO/DaoLancheTest.java`, `src/test/java/Controllers/SalvarLancheClienteTest.java` | Parcial: o servlet não usa `MontagemLancheService` |
+| RF-LAN-004 | `src/java/Model/Lanche.java`, `src/java/DAO/DaoLanche.java` | `src/test/java/DAO/DaoLancheTest.java` (`deveSalvarLancheAtivo`, `deveSalvarLancheClienteERetornarId`, `deveListarTodosOsLanchesAtivos`) | Validado |
+| RF-LAN-005, RF-LAN-007 a RF-LAN-008, RF-LAN-021 a RF-LAN-023 | `src/java/DAO/DaoLanche.java` (`pesquisaPorNome`, `criarLanche`) | `src/test/java/DAO/DaoLancheTest.java` (`deveEncontrarLanchePeloNome`, `deveRetornarLancheVazioQuandoNaoEncontrarNome`, `deveEncontrarLancheUtilizandoObjeto`) | Validado |
+| RF-LAN-006, RF-LAN-019 a RF-LAN-020 | `src/java/DAO/DaoLanche.java` (`listarTodos`) | `src/test/java/DAO/DaoLancheTest.java` (`deveListarTodosOsLanchesAtivos`, `deveRetornarListaVaziaQuandoNaoExistiremLanches`) | Validado |
+| RF-LAN-009 a RF-LAN-018 | `src/java/DAO/DaoLanche.java` (`validarLanche`, `validarNome`) | `src/test/java/DAO/DaoLancheTest.java` (testes de dados nulos, vazios, em branco, `NaN`, infinito, negativo e zero) | Validado |
+| RF-LAN-024 a RF-LAN-030 | `src/java/DAO/DaoLanche.java` (`vincularIngrediente`) | `src/test/java/DAO/DaoLancheTest.java` (`deveVincularIngredienteComSucesso` e testes de identificadores, nulos e quantidade) | Validado |
+| RF-LAN-031 a RF-LAN-034, RF-LAN-036, RF-LAN-038 | `src/java/Service/MontagemLancheService.java` | `src/test/java/Service/MontagemLancheServiceTest.java` (montagem, validação, cálculo, composição vazia e limite de valor) | Validado no serviço |
+| RF-LAN-035 | `src/java/Service/MontagemLancheService.java` (`validarIngredientesSelecionados`) | `src/test/java/Service/MontagemLancheServiceTest.java` (`deveRejeitarIdentificadorInvalido`, `deveRejeitarIngredienteInativo`) | Validado no serviço; o servlet legado tem tratamento diferente |
+| RF-LAN-037 | `src/java/Service/MontagemLancheService.java` | `src/test/java/Service/MontagemLancheServiceTest.java` (`deveMontarComSucesso`) e `src/test/java/Controllers/SalvarLancheClienteTest.java` (`deveVincularCadaIngredienteAoLanche`) | Parcial: o serviço vincula, mas o teste do servlet caracteriza que nenhum ingrediente é vinculado |
+| RF-LAN-039 | `src/java/Service/MontagemLancheService.java`, `src/java/Controllers/salvarLancheCliente.java` | `src/test/java/Service/MontagemLancheServiceTest.java` (`deveMontarComSucesso`), `src/test/java/Controllers/SalvarLancheClienteTest.java` (`deveResponderComLinkDoCarrinho`) | Parcial |
+
+`src/java/Model/Ingrediente.java` e `src/java/DAO/DaoIngrediente.java` fornecem
+os dados de entrada, mas não são os arquivos que validam RF-LAN-024 a
+RF-LAN-035; por isso não aparecem como responsáveis por esses requisitos.
+
+### 4.2. Requisitos não funcionais
+
+| Requisito | Implementação / evidência | Arquivo de validação | Situação |
+|---|---|---|---|
+| RNF-LAN-001 a RNF-LAN-005 | `src/java/DAO/DaoLanche.java` (exceções, `try-with-resources`, consultas com e sem resultado) | `src/test/java/DAO/DaoLancheTest.java` (falhas de banco, fechamento de recursos, lista vazia e registro inexistente) | Validado |
+| RNF-LAN-006, RNF-LAN-014 | `src/java/DAO/DaoLanche.java` (`?` e `PreparedStatement`) | `src/test/java/DAO/DaoLancheTest.java` (`deveUtilizarParametroParaPesquisarNome`) | Validado |
+| RNF-LAN-007 | `src/java/DAO/DaoLanche.java`, `src/java/Service/MontagemLancheService.java` | `src/test/java/DAO/DaoLancheTest.java`, `src/test/java/Service/MontagemLancheServiceTest.java` | Validado |
+| RNF-LAN-008 | `src/java/DAO/DaoLanche.java`, `src/java/Controllers/salvarLancheCliente.java` | Não há teste específico de exposição de erro | Não validado |
+| RNF-LAN-009 a RNF-LAN-010 | `src/java/Service/MontagemLancheService.java`, `src/java/DAO/DaoLanche.java` | Inspeção dos arquivos de implementação; `src/test/java/Service/MontagemLancheServiceTest.java` valida a separação por injeção do DAO | Parcial |
+| RNF-LAN-011, RNF-LAN-017 a RNF-LAN-018 | Construtores com dependência injetável em `src/java/DAO/DaoLanche.java` e `src/java/Service/MontagemLancheService.java` | `src/test/java/DAO/DaoLancheTest.java`, `src/test/java/Service/MontagemLancheServiceTest.java` | Validado |
+| RNF-LAN-012 a RNF-LAN-013 | `src/java/DAO/DaoLanche.java`, `src/java/Service/MontagemLancheService.java` | Testes de validação e mensagens em `src/test/java/DAO/DaoLancheTest.java` e `src/test/java/Service/MontagemLancheServiceTest.java` | Parcial |
+| RNF-LAN-015 a RNF-LAN-016 | `src/java/Service/MontagemLancheService.java` (`calcularValorComposicao`, validação em uma passagem) | `src/test/java/Service/MontagemLancheServiceTest.java` | Parcial: não há teste que meça chamadas redundantes ao DAO |
+| RNF-LAN-019 | Configuração JaCoCo em `pom.xml` | `docs/ai/vinicius-fonseca/AI-LOG.md` (registro do resultado de cobertura) | Evidência documental; relatório reproduzível não está em `docs/entrega-2` |
+| RNF-LAN-020 | Configuração PIT em `pom.xml` | `docs/ai/vinicius-fonseca/AI-LOG.md` (registro do resultado de mutação) | Evidência documental; relatório reproduzível não está em `docs/entrega-2` |
+
+### 4.3. Pendências identificadas
+
+| Pendência | Evidência |
 |---|---|
-| `Lanche` | RF-LAN-001, RF-LAN-004, RF-LAN-008, RF-LAN-023 |
-| `DaoLanche` | RF-LAN-001 a RF-LAN-030 |
-| `MontagemLancheService` | RF-LAN-031 a RF-LAN-039 |
-| `Controllers.salvarLancheCliente` | RF-LAN-003, RF-LAN-031, RF-LAN-039 |
-| `Ingrediente` / `DaoIngrediente` | RF-LAN-024 a RF-LAN-035 |
-| Integração com banco de dados | RNF-LAN-001 a RNF-LAN-005 |
-| Arquitetura do módulo | RNF-LAN-009 a RNF-LAN-013 |
-| Testes automatizados | RNF-LAN-017 a RNF-LAN-020 |
+| O servlet `salvarLancheCliente` reutiliza um `Iterator` já consumido e não vincula os ingredientes. | `src/test/java/Controllers/SalvarLancheClienteTest.java` (`deveVincularCadaIngredienteAoLanche`, marcado `defeito-conhecido`, e `caracterizacaoNenhumIngredienteEhVinculado`) |
+| O servlet aceita composição vazia e quantidade negativa, contrariando as regras do serviço. | `src/test/java/Controllers/SalvarLancheClienteTest.java` (`caracterizacaoComposicaoVaziaGeraLancheDePrecoZero`, `caracterizacaoQuantidadeNegativaReduzPreco`) |
+| A matriz anterior atribuía RF-LAN-024 a RF-LAN-035 a `Ingrediente/DaoIngrediente`, mas a validação está em `DaoLancheTest` e `MontagemLancheServiceTest`. | Arquivos de teste listados na seção 4.1 |
+| RNF-LAN-008, RNF-LAN-015, RNF-LAN-019 e RNF-LAN-020 não possuem, nesta entrega, teste ou relatório verificável diretamente no diretório de evidências. | Seção 4.2 |
