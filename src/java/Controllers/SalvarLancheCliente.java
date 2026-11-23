@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
+import java.util.Objects;
 
 /**
  *
@@ -53,10 +54,10 @@ public class SalvarLancheCliente extends HttpServlet {
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -85,7 +86,7 @@ public class SalvarLancheCliente extends HttpServlet {
     }
 
     private JSONObject lerPayloadJson(BufferedReader leitor) throws IOException {
-        String linhaJson = leitor.readLine();
+        String linhaJson = Objects.toString(leitor.readLine(), "");
         String jsonUtf8 = new String(linhaJson.getBytes(ISO_8859_1), UTF_8);
         return new JSONObject(jsonUtf8);
     }
@@ -151,11 +152,12 @@ public class SalvarLancheCliente extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the
+    // + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      */
     @Override
@@ -166,7 +168,7 @@ public class SalvarLancheCliente extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      */
     @Override
