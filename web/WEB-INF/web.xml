@@ -110,7 +110,7 @@
     </servlet>
     <servlet>
         <servlet-name>salvarLancheCliente</servlet-name>
-        <servlet-class>Controllers.salvarLancheCliente</servlet-class>
+        <servlet-class>Controllers.SalvarLancheCliente</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>salvarFuncionario</servlet-name>
