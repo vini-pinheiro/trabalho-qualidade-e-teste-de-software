@@ -77,7 +77,7 @@ public class comprar extends HttpServlet {
 
         if (validarCookies(request)) {
             JSONObject dados = lerDadosJson(br);
-            Cliente cliente = this.clienteDao.pesquisaPorID(String.valueOf(dados.getInt("id")));
+            Cliente cliente = this.clienteDao.pesquisaPorID(Integer.toString(dados.getInt("id")));
 
             List<Lanche> lanches = new ArrayList<>();
             List<Bebida> bebidas = new ArrayList<>();

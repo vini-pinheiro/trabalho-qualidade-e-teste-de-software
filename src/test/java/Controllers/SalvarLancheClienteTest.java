@@ -55,14 +55,14 @@ class SalvarLancheClienteTest {
     @Mock
     private HttpServletResponse response;
 
-    private salvarLancheCliente controller;
+    private SalvarLancheCliente controller;
     private StringWriter resposta;
     private Lanche lancheGravado;
     private final Map<String, Ingrediente> estoque = new HashMap<String, Ingrediente>();
 
     @BeforeEach
     void preparar() throws Exception {
-        controller = new salvarLancheCliente(validadorCookie, lancheDao, ingredienteDao);
+        controller = new SalvarLancheCliente(validadorCookie, lancheDao, ingredienteDao);
         resposta = new StringWriter();
         when(response.getWriter()).thenReturn(new PrintWriter(resposta));
         when(validadorCookie.validar(any())).thenReturn(true);

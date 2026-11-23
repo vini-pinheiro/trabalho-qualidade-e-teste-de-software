@@ -158,7 +158,7 @@ public class DaoEndereco {
     
     public Endereco pesquisarEnderecoPorID(int id){
    
-        String sql = "SELECT * FROM tb_enderecos WHERE id_endereco = '"+String.valueOf(id)+"'";
+        String sql = "SELECT * FROM tb_enderecos WHERE id_endereco = '"+id+"'";
         ResultSet rs;
         Endereco resultado = new Endereco();
         

@@ -17,6 +17,8 @@ import java.io.PrintWriter;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
@@ -28,18 +30,20 @@ import org.json.JSONObject;
  *
  * @author kener_000
  */
-public class salvarLancheCliente extends HttpServlet {
+public class SalvarLancheCliente extends HttpServlet {
 
-    // Nulos no uso normal (Tomcat): as dependências continuam sendo criadas a cada requisição
-    private ValidadorCookie validadorCookie;
-    private DaoLanche lancheDaoInjetado;
-    private DaoIngrediente ingredienteDaoInjetado;
+    private static final Logger LOGGER = Logger.getLogger(SalvarLancheCliente.class.getName());
 
-    public salvarLancheCliente() {
+    private final ValidadorCookie validadorCookie;
+    private final DaoLanche lancheDaoInjetado;
+    private final DaoIngrediente ingredienteDaoInjetado;
+
+    public SalvarLancheCliente() {
+        this(new ValidadorCookie(), new DaoLanche(), new DaoIngrediente());
     }
 
     // Usado nos testes para isolar cookie e banco
-    public salvarLancheCliente(ValidadorCookie validadorCookie, DaoLanche lancheDao, DaoIngrediente ingredienteDao) {
+    public SalvarLancheCliente(ValidadorCookie validadorCookie, DaoLanche lancheDao, DaoIngrediente ingredienteDao) {
         this.validadorCookie = validadorCookie;
         this.lancheDaoInjetado = lancheDao;
         this.ingredienteDaoInjetado = ingredienteDao;
@@ -65,12 +69,12 @@ public class salvarLancheCliente extends HttpServlet {
         ////////Validar Cookie
         boolean resultado = false;
         
-        try{
-        Cookie[] cookies = request.getCookies();
-        ValidadorCookie validar = (validadorCookie != null) ? validadorCookie : new ValidadorCookie();
-        
-        resultado = validar.validar(cookies);
-        }catch(java.lang.NullPointerException e){}
+        try {
+            Cookie[] cookies = request.getCookies();
+            resultado = validadorCookie.validar(cookies);
+        } catch (NullPointerException e) {
+            LOGGER.log(Level.WARNING, "Cookies ausentes; a requisi\u00e7\u00e3o ser\u00e1 recusada", e);
+        }
         //////////////
         
         if ((br != null) && resultado) {
@@ -121,7 +125,7 @@ public class salvarLancheCliente extends HttpServlet {
             }
             
             try (PrintWriter out = response.getWriter()) {
-            out.println("../carrinho/carrinho.html?nome="+String.valueOf(lancheComID.getNome())+"&preco="+String.valueOf(lancheComID.getValor_venda()));
+            out.println("../carrinho/carrinho.html?nome="+lancheComID.getNome()+"&preco="+lancheComID.getValor_venda());
             }
         } else {
             try (PrintWriter out = response.getWriter()) {
@@ -142,9 +146,12 @@ public class salvarLancheCliente extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            processRequest(request, response);
+        } catch (ServletException | IOException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao processar requisi\u00e7\u00e3o GET", e);
+        }
     }
 
     /**
@@ -156,9 +163,12 @@ public class salvarLancheCliente extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            processRequest(request, response);
+        } catch (ServletException | IOException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao processar requisi\u00e7\u00e3o POST", e);
+        }
     }
 
     /**
