@@ -1,0 +1,60 @@
+# Code Burguer's publicado na VPS, atrás do nginx do host e do Cloudflare Access.
+# Uso (na raiz do repositório): docker compose -f deploy/compose.vps.yml up -d --build
+#
+# - O banco fica numa rede interna, sem porta publicada e sem saída para a internet:
+#   nem o host nem os outros contêineres da VPS alcançam o PostgreSQL deste projeto.
+# - A aplicação só escuta em 127.0.0.1:8895; quem a expõe é o vhost do nginx
+#   (deploy/nginx/codeburguer.conf), que só aceita tráfego vindo do Cloudflare.
+# - A senha do PostgreSQL é a mesma fixada em DaoUtil e context.xml. Ela não sai da
+#   rede interna; trocar exigiria mudar o código da aplicação.
+name: codeburguer
+
+services:
+  db:
+    image: postgres:13
+    container_name: codeburguer-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lanchonete
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+    volumes:
+      - ../banco.sql:/docker-entrypoint-initdb.d/01-banco.sql:ro
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - interna
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lanchonete"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: codeburguer-app:local
+    container_name: codeburguer-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8895:8080"
+    networks:
+      - interna
+      - borda
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 768m
+
+networks:
+  interna:
+    internal: true
+  borda: {}
+
+volumes:
+  db-data:
