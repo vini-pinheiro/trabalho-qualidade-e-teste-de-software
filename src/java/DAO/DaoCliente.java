@@ -13,29 +13,46 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  *
  * @author kener_000
  */
 public class DaoCliente {
 
+    // Entrega 2 (Sonar): logger no lugar de System.out/System.err
+    private static final Logger LOGGER = Logger.getLogger(DaoCliente.class.getName());
+
+    // Entrega 2 (Sonar): nomes de coluna repetidos viram constantes
+    private static final String COL_ID_CLIENTE = "id_cliente";
+    private static final String COL_SOBRENOME = "sobrenome";
+    private static final String COL_TELEFONE = "telefone";
+    private static final String COL_USUARIO = "usuario";
+    private static final String COL_SENHA = "senha";
+
     private Connection conecta;
     // Nulo no uso normal: salvar() continua criando o DaoEndereco sob demanda
     private DaoEndereco enderecoDao;
+    private EncryptadorMD5 md5;
     
     public DaoCliente(){
         this.conecta = new DaoUtil().conecta();
+        this.md5 = new EncryptadorMD5();
     }
 
     // Permite testar o DAO sem banco real, inclusive o DaoEndereco usado em salvar()
     public DaoCliente(Connection conecta, DaoEndereco enderecoDao){
+        this(conecta, enderecoDao, new EncryptadorMD5());
+    }
+
+    public DaoCliente(Connection conecta, DaoEndereco enderecoDao, EncryptadorMD5 md5){
         this.conecta = conecta;
         this.enderecoDao = enderecoDao;
+        this.md5 = md5;
     }
     
     public void salvar(Cliente cliente){
-        //String sql = "INSERT INTO tb_clientes(nome, sobrenome, telefone, usuario, senha, fg_ativo, id_endereco) "
-        //        + "VALUES(?,?,?,?,?,?,?)";
         String sql = "INSERT INTO tb_clientes(nome, sobrenome, telefone, usuario, senha, fg_ativo, id_endereco) "
                   + "VALUES(?,?,?,?, MD5(?),?,?)";
         
@@ -67,7 +84,7 @@ public class DaoCliente {
     public List<Cliente> listarTodos(){
         String sql = "SELECT * FROM tb_clientes WHERE fg_Ativo='1' ORDER BY id_cliente";
         ResultSet rs;
-        List<Cliente> clientes = new ArrayList<Cliente>();
+        List<Cliente> clientes = new ArrayList<>();
         
         try{
             
@@ -77,12 +94,12 @@ public class DaoCliente {
             while (rs.next()){
             
                 Cliente cliente = new Cliente();
-                cliente.setId_cliente(rs.getInt("id_cliente"));
+                cliente.setId_cliente(rs.getInt(COL_ID_CLIENTE));
                 cliente.setNome(rs.getString("nome"));
-                cliente.setSobrenome(rs.getString("sobrenome"));
-                cliente.setTelefone(rs.getString("telefone"));
-                cliente.setUsuario(rs.getString("usuario"));
-                cliente.setSenha(rs.getString("senha"));
+                cliente.setSobrenome(rs.getString(COL_SOBRENOME));
+                cliente.setTelefone(rs.getString(COL_TELEFONE));
+                cliente.setUsuario(rs.getString(COL_USUARIO));
+                cliente.setSenha(rs.getString(COL_SENHA));
                 cliente.setFg_ativo(1);
                 
                 clientes.add(cliente);
@@ -111,12 +128,12 @@ public class DaoCliente {
             
             while (rs.next()){
             
-                clienteResultado.setId_cliente(rs.getInt("id_cliente"));
+                clienteResultado.setId_cliente(rs.getInt(COL_ID_CLIENTE));
                 clienteResultado.setNome(rs.getString("nome"));
-                clienteResultado.setSobrenome(rs.getString("sobrenome"));
-                clienteResultado.setTelefone(rs.getString("telefone"));
-                clienteResultado.setUsuario(rs.getString("usuario"));
-                clienteResultado.setSenha(rs.getString("senha"));
+                clienteResultado.setSobrenome(rs.getString(COL_SOBRENOME));
+                clienteResultado.setTelefone(rs.getString(COL_TELEFONE));
+                clienteResultado.setUsuario(rs.getString(COL_USUARIO));
+                clienteResultado.setSenha(rs.getString(COL_SENHA));
                 clienteResultado.setFg_ativo(1);
 
             }
@@ -132,8 +149,8 @@ public class DaoCliente {
         
     }
     
-    public Cliente pesquisaPorID(String ID){
-        String sql = "SELECT * FROM tb_clientes WHERE id_cliente='"+ID+"'";
+    public Cliente pesquisaPorID(String id){
+        String sql = "SELECT * FROM tb_clientes WHERE id_cliente='"+id+"'";
         ResultSet rs;
         Cliente clienteResultado = new Cliente();
         
@@ -143,10 +160,10 @@ public class DaoCliente {
             rs = stmt.executeQuery();
             
             while (rs.next()){
-                clienteResultado.setId_cliente(rs.getInt("id_cliente"));
+                clienteResultado.setId_cliente(rs.getInt(COL_ID_CLIENTE));
                 clienteResultado.setNome(rs.getString("nome"));
-                clienteResultado.setSobrenome(rs.getString("sobrenome"));
-                clienteResultado.setTelefone(rs.getString("telefone"));
+                clienteResultado.setSobrenome(rs.getString(COL_SOBRENOME));
+                clienteResultado.setTelefone(rs.getString(COL_TELEFONE));
                 clienteResultado.setFg_ativo(1);
             }
             rs.close();
@@ -164,35 +181,25 @@ public class DaoCliente {
     public boolean login(Cliente cliente){
         String sql = "SELECT usuario, senha, fg_ativo FROM tb_clientes WHERE usuario = ?";
         
-        try{
-            PreparedStatement stmt = conecta.prepareStatement(sql);
+        // Entrega 2 (Sonar): try-with-resources fecha o ResultSet e o PreparedStatement mesmo quando há erro
+        try (PreparedStatement stmt = conecta.prepareStatement(sql)) {
             stmt.setString(1, cliente.getUsuario());
-        
-            ResultSet rs;
-            rs = stmt.executeQuery();
             Cliente validCliente = new Cliente();
-            EncryptadorMD5 md5 = new EncryptadorMD5();
-            
-            while (rs.next()){    
-                validCliente.setUsuario(rs.getString("usuario"));
-                validCliente.setSenha(rs.getString("senha"));
-                validCliente.setFg_ativo(rs.getInt("fg_ativo"));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()){
+                    validCliente.setUsuario(rs.getString(COL_USUARIO));
+                    validCliente.setSenha(rs.getString(COL_SENHA));
+                    validCliente.setFg_ativo(rs.getInt("fg_ativo"));
+                }
             }
-            
-            rs.close();
-            stmt.close();
-            
-            System.out.println(md5.encryptar(cliente.getSenha()));
-            System.out.println(validCliente.getSenha());
-            
-            System.out.println((md5.encryptar(cliente.getSenha()).equals(validCliente.getSenha())));
-            
-            if((md5.encryptar(cliente.getSenha()).equals(validCliente.getSenha())) && (validCliente.getFg_ativo() == 1)){
-                return true;
-            } else { return false; }
-            
+
+            // Entrega 2 (Sonar): sem os System.out que imprimiam o hash da senha; um único return no lugar do if/else
+            return md5.encryptar(cliente.getSenha()).equals(validCliente.getSenha())
+                    && validCliente.getFg_ativo() == 1;
+
         } catch(SQLException e){
-            System.err.println("Erro ao fazer login: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Erro ao fazer login", e);
         }
         
         return false;
