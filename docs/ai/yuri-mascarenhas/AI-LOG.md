@@ -13,6 +13,7 @@
 | Yuri Mascarenhas | Testes de validação de token e de remoção no logout (commit `baf71a2`, 20/09) | _preencher_ | _preencher_ | _preencher_ | _preencher_ | _preencher_ |
 | Yuri Mascarenhas | Execução do caso de teste manual CT-01 (21/09): 8 passos, todos PASSOU | Sem uso de IA | — | — | — | Execução na aplicação em Docker, com prints anexados ao documento do caso. |
 | Yuri Mascarenhas | Entrega 2 — melhoria dos testes unitários de `ValidadorCookie` | Claude Code (Claude Opus 5.5) | "Me ajude a melhorar, isolando as dependências, os testes unitárias do arquivo anexo" | Reescreveu `ValidadorCookieTest` com partições de equivalência (11 → 28 testes). Cobertura de arestas 22/22; PITest ALL 68/74 → 73/74. | Manter propostas | Todo código modificado foi verificado e testado manualmente antes do commit |
+| Yuri Mascarenhas | Entrega 2 — teste de integração de `ValidadorCookie` com PostgreSQL | Claude Code (Claude Opus 5.5) | "Que tipo de teste de integração posso utilizar para validar o ValidadorCookie?" | Criou uma "interface" de `ValidadorCookieIT` com 7 testes verdes e 2 de defeito vermelhos. | Manter Propostas | Validar as propostas, analisando se faz sentido para o contexto e desenvolver o código dos "esboços" propostos.
 
 
 ---
