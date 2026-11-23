@@ -17,8 +17,10 @@ navegador ──> Cloudflare (DNS proxied + Access: login obrigatório)
                             codeburguer-db (PostgreSQL 13, volume próprio)
 ```
 
-- **Quem entra:** qualquer e-mail `@id.uff.br` e os e-mails pessoais listados na política do Access.
-- **Como entra:** "Entrar com Google" ou código de 6 dígitos enviado por e-mail (One-time PIN).
+- **Quem entra:** qualquer e-mail `@id.uff.br` e os e-mails pessoais listados na política do Access
+  (app `Code Burguer's (UFF) - privado`, política `UFF e equipe do Code Burguer's`).
+- **Como entra:** código de 6 dígitos enviado por e-mail (One-time PIN). O "Entrar com Google" entra
+  quando o provedor Google for cadastrado no Zero Trust (passo 3 abaixo).
 - **Isolamento:** projeto Compose próprio (`codeburguer`), sem nada compartilhado com a stack da MAIA.
   O banco não tem porta publicada nem rota de saída, então as falhas conhecidas da aplicação
   (#22, #23) ficam restritas a este banco de demonstração.
@@ -32,6 +34,7 @@ Na VPS, como `niutech`:
 ```bash
 git clone https://github.com/vini-pinheiro/trabalho-qualidade-e-teste-de-software.git ~/apps/codeburguer
 cd ~/apps/codeburguer
+git switch -c vps origin/master
 docker compose -f deploy/compose.vps.yml up -d --build
 bash deploy/trocar-senha-admin.sh
 
@@ -57,8 +60,9 @@ No Cloudflare (conta da NIUTech, zona `maia-ai.com.br`):
      de exceções.
    Esse app é mais específico que o `*.maia-ai.com.br` da MAIA, então a política dele é a que vale.
 3. **Login com Google (feito pelo dono da conta Google Cloud):**
-   - no Google Cloud Console, criar um *OAuth client ID* do tipo *Web application* com o redirect
-     `https://<time>.cloudflareaccess.com/cdn-cgi/access/callback`;
+   - no Google Cloud Console, criar um *OAuth client ID* do tipo *Web application* com a origem
+     `https://wild-truth-50df.cloudflareaccess.com` e o redirect
+     `https://wild-truth-50df.cloudflareaccess.com/cdn-cgi/access/callback`;
    - em Zero Trust → Settings → Authentication → Add new → Google, colar o Client ID e o Client secret;
    - marcar o Google como método de login no app acima.
 
@@ -66,9 +70,13 @@ No Cloudflare (conta da NIUTech, zona `maia-ai.com.br`):
 
 ```bash
 cd ~/apps/codeburguer
-git pull --ff-only
+git fetch origin
+git switch -C vps origin/master
 docker compose -f deploy/compose.vps.yml up -d --build app
 ```
+
+O checkout da VPS fica na branch local `vps`, que só acompanha o `origin/master` (nada é commitado
+nem enviado de lá).
 
 O banco e os dados ficam no volume `codeburguer_db-data`; `--build app` recria só a aplicação.
 
