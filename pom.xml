@@ -217,6 +217,7 @@
                                     <element>CLASS</element>
                                     <includes>
                                         <include>${jacoco.check.classes}</include>
+                                        <include>DAO.DaoIngrediente</include>
                                     </includes>
                                     <limits>
                                         <limit>

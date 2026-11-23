@@ -68,6 +68,7 @@ class DaoIngredienteTest {
     private void conferirCheddar(Ingrediente ingrediente) {
         assertEquals(3, ingrediente.getId_ingrediente());
         assertEquals("Queijo Cheddar", ingrediente.getNome());
+        assertEquals("Fatia de queijo cheddar", ingrediente.getDescricao());
         assertEquals(150, ingrediente.getQuantidade());
         assertEquals(0.80, ingrediente.getValor_compra(), 0.001);
         assertEquals(2.00, ingrediente.getValor_venda(), 0.001);
@@ -123,9 +124,15 @@ class DaoIngredienteTest {
         verify(conexao).prepareStatement(sql.capture());
         assertTrue(sql.getValue().startsWith("UPDATE tb_ingredientes SET"));
         assertTrue(sql.getValue().endsWith("WHERE id_ingrediente =?"));
+        verify(comando).setString(1, "Queijo Cheddar");
+        verify(comando).setString(2, "Fatia de queijo cheddar");
         verify(comando).setInt(3, 0);
+        verify(comando).setDouble(4, 0.80);
+        verify(comando).setDouble(5, 2.00);
+        verify(comando).setString(6, "queijo");
         verify(comando).setInt(7, 3);
         verify(comando).execute();
+        verify(comando).close();
     }
 
     @Test
@@ -135,8 +142,12 @@ class DaoIngredienteTest {
 
         dao.remover(cheddar());
 
+        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        verify(conexao).prepareStatement(sql.capture());
+        assertTrue(sql.getValue().startsWith("DELETE FROM tb_ingredientes"));
         verify(comando).setInt(1, 3);
         verify(comando).execute();
+        verify(comando).close();
     }
 
     @Test
@@ -165,7 +176,45 @@ class DaoIngredienteTest {
         assertTrue(sql.getValue().contains("il.quantidade"));
         verify(comando).setInt(1, 9);
         assertEquals(1, ingredientes.size());
-        assertEquals(2, ingredientes.get(0).getQuantidade());
+        Ingrediente doLanche = ingredientes.get(0);
+        assertEquals(3, doLanche.getId_ingrediente());
+        assertEquals("Queijo Cheddar", doLanche.getNome());
+        assertEquals("Fatia de queijo cheddar", doLanche.getDescricao());
+        assertEquals(2, doLanche.getQuantidade());
+        assertEquals(0.80, doLanche.getValor_compra(), 0.001);
+        assertEquals(2.00, doLanche.getValor_venda(), 0.001);
+        assertEquals("queijo", doLanche.getTipo());
+        assertEquals(1, doLanche.getFg_ativo());
+        verify(resultado).close();
+        verify(comando).close();
+    }
+
+    @Test
+    @DisplayName("listarTodosPorLanche devolve lista vazia para lanche sem ingredientes")
+    void deveDevolverListaVaziaParaLancheSemIngredientes() throws SQLException {
+        when(conexao.prepareStatement(anyString())).thenReturn(comando);
+        when(comando.executeQuery()).thenReturn(resultado);
+        when(resultado.next()).thenReturn(false);
+
+        assertTrue(dao.listarTodosPorLanche(9).isEmpty());
+        verify(resultado).close();
+        verify(comando).close();
+    }
+
+    @Test
+    @DisplayName("listarTodos devolve uma entrada por linha, na ordem do banco")
+    void deveListarVariasLinhasNaOrdem() throws SQLException {
+        bancoRespondeLinhaDoCheddar();
+        when(resultado.next()).thenReturn(true, true, false);
+        when(resultado.getInt("id_ingrediente")).thenReturn(3, 4);
+        when(resultado.getString("nm_ingrediente")).thenReturn("Queijo Cheddar", "Bacon");
+
+        List<Ingrediente> ingredientes = dao.listarTodos();
+
+        assertEquals(2, ingredientes.size());
+        assertEquals("Queijo Cheddar", ingredientes.get(0).getNome());
+        assertEquals(4, ingredientes.get(1).getId_ingrediente());
+        assertEquals("Bacon", ingredientes.get(1).getNome());
     }
 
     @Test
@@ -174,6 +223,8 @@ class DaoIngredienteTest {
         bancoRespondeLinhaDoCheddar();
 
         conferirCheddar(dao.pesquisaPorNome(cheddar()));
+        verify(resultado).close();
+        verify(comando).close();
     }
 
     @Test
