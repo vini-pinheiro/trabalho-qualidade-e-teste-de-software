@@ -11,7 +11,8 @@ if [ "${#senha}" -lt 16 ]; then
 fi
 hash=$(printf '%s' "$senha" | md5sum | cut -d' ' -f1)
 
-alteradas=$(docker exec -i codeburguer-db psql -U postgres -d lanchonete -tA -v ON_ERROR_STOP=1 \
+# -q tira a linha "UPDATE 1"; sobra só um id por funcionário alterado
+alteradas=$(docker exec -i codeburguer-db psql -U postgres -d lanchonete -qtA -v ON_ERROR_STOP=1 \
     -c "UPDATE tb_funcionarios SET senha = '$hash' WHERE usuario = 'admin' RETURNING id_funcionario" | grep -c . || true)
 if [ "$alteradas" != "1" ]; then
     echo "Esperava alterar 1 funcionário admin, alterou $alteradas." >&2
