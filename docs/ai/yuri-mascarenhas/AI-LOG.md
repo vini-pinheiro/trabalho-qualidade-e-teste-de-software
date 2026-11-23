@@ -4,11 +4,6 @@
 **Entrega:** Etapa 1 — Testes Unitários Automatizados
 **Módulo:** Autenticação, Sessões e Controle de Acesso (`Helpers.ValidadorCookie`)
 
-> **Este arquivo está incompleto: só o Yuri pode preenchê-lo.**
-> As linhas abaixo trazem o que consta no histórico do repositório. Preencha as colunas de ferramenta, prompt e
-> resultado com o que você realmente usou. Se não usou IA em alguma atividade, escreva "Sem uso de IA" na linha —
-> isso também é uma resposta válida e é melhor do que deixar em branco.
-
 ---
 
 | Responsável | Atividade | Ferramenta | Prompt / Instrução Utilizada | Resultado da IA | Decisão | Validação |
@@ -17,6 +12,8 @@
 | Yuri Mascarenhas | Refatoração de `ValidadorCookie` para receber `DaoToken` por construtor, permitindo mock (commits `2c346c9` e `8adca79`, 19/09) | _preencher_ | _preencher_ | _preencher_ | _preencher_ | _preencher_ |
 | Yuri Mascarenhas | Testes de validação de token e de remoção no logout (commit `baf71a2`, 20/09) | _preencher_ | _preencher_ | _preencher_ | _preencher_ | _preencher_ |
 | Yuri Mascarenhas | Execução do caso de teste manual CT-01 (21/09): 8 passos, todos PASSOU | Sem uso de IA | — | — | — | Execução na aplicação em Docker, com prints anexados ao documento do caso. |
+| Yuri Mascarenhas | Entrega 2 — melhoria dos testes unitários de `ValidadorCookie` | Claude Code (Claude Opus 5.5) | "Me ajude a melhorar, isolando as dependências, os testes unitárias do arquivo anexo" | Reescreveu `ValidadorCookieTest` com partições de equivalência (11 → 28 testes). Cobertura de arestas 22/22; PITest ALL 68/74 → 73/74. | Manter propostas | Todo código modificado foi verificado e testado manualmente antes do commit |
+
 
 ---
 
