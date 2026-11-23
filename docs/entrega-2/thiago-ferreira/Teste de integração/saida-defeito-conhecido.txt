@@ -1,0 +1,74 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.lanchonete:lanchonete-online >------------------
+[INFO] Building lanchonete-online 1.0-SNAPSHOT
+[INFO] --------------------------------[ war ]---------------------------------
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.11:prepare-agent (jacoco-unitarios-agente) @ lanchonete-online ---
+[INFO] argLine set to -javaagent:/root/.m2/repository/org/jacoco/org.jacoco.agent/0.8.11/org.jacoco.agent-0.8.11-runtime.jar=destfile=/app/target/jacoco.exec
+[INFO] 
+[INFO] --- maven-resources-plugin:3.2.0:resources (default-resources) @ lanchonete-online ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 1 resource
+[INFO] 
+[INFO] --- maven-resources-plugin:3.2.0:copy-resources (copy-webxml) @ lanchonete-online ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 1 resource
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.8.1:compile (default-compile) @ lanchonete-online ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 54 source files to /app/target/classes
+[INFO] 
+[INFO] --- maven-resources-plugin:3.2.0:testResources (default-testResources) @ lanchonete-online ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] skip non existing resourceDirectory /app/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.8.1:testCompile (default-testCompile) @ lanchonete-online ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 19 source files to /app/target/test-classes
+[INFO] 
+[INFO] --- maven-failsafe-plugin:2.22.2:integration-test (default-cli) @ lanchonete-online ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running Controllers.CadastroIT
+Rua Integracao 8ca9b4dc
+Rua Integracao 8ca9b4dc
+Rua Integracao 8ca9b4dc
+Rua Integracao 8ca9b4dc
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 4.174 s <<< FAILURE! - in Controllers.CadastroIT
+[ERROR] naoDeveGravarUsuarioDuplicadoNoBanco  Time elapsed: 4.095 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: o banco deve ter um único cliente com esse usuário ==> expected: <1> but was: <2>
+	at Controllers.CadastroIT.naoDeveGravarUsuarioDuplicadoNoBanco(CadastroIT.java:150)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   CadastroIT.naoDeveGravarUsuarioDuplicadoNoBanco:150 o banco deve ter um único cliente com esse usuário ==> expected: <1> but was: <2>
+[INFO] 
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- maven-failsafe-plugin:2.22.2:verify (default-cli) @ lanchonete-online ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  35.297 s
+[INFO] Finished at: 2026-11-22T23:06:19Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-failsafe-plugin:2.22.2:verify (default-cli) on project lanchonete-online: There are test failures.
+[ERROR] 
+[ERROR] Please refer to /app/target/failsafe-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

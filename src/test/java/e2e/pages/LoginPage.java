@@ -37,6 +37,12 @@ public class LoginPage {
     }
 
     public void realizarLogin(String usuario, String senha) {
+        tentarLogin(usuario, senha);
+        wait.until(ExpectedConditions.urlContains("/view/carrinho/carrinho.html"));
+    }
+
+    /** Preenche e envia o formulário sem esperar redirecionamento (útil para login recusado). */
+    public void tentarLogin(String usuario, String senha) {
         WebElement campoUsuario = wait.until(ExpectedConditions.visibilityOfElementLocated(LOGIN_INPUT));
         campoUsuario.clear();
         campoUsuario.sendKeys(usuario);
@@ -46,7 +52,6 @@ public class LoginPage {
         campoSenha.sendKeys(senha);
 
         wait.until(ExpectedConditions.elementToBeClickable(BOTAO_ENTRAR)).click();
-        wait.until(ExpectedConditions.urlContains("/view/carrinho/carrinho.html"));
     }
 
     public String aguardarEAceitarAlerta() {

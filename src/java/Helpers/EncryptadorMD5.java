@@ -7,13 +7,18 @@ package Helpers;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author kener_000
  */
 public class EncryptadorMD5 {
-    
+
+    // Entrega 2 (Sonar): logger no lugar de System.out
+    private static final Logger LOGGER = Logger.getLogger(EncryptadorMD5.class.getName());
+
     public String encryptar(String senha){
         String plaintext = senha;
         try {
@@ -23,16 +28,17 @@ public class EncryptadorMD5 {
             m.update(plaintext.getBytes());
             byte[] digest = m.digest();
             BigInteger bigInt = new BigInteger(1,digest);
-            String hashtext = bigInt.toString(16);
+            // Entrega 2 (Sonar): StringBuilder no lugar de concatenar String dentro do laço
+            StringBuilder hashtext = new StringBuilder(bigInt.toString(16));
             // Now we need to zero pad it if you actually want the full 32 chars.
             while(hashtext.length() < 32 ){
-              hashtext = "0"+hashtext;
+              hashtext.insert(0, '0');
             }
-            return hashtext;
-            
-        } catch(Exception e) { 
-            System.out.println(e);
-        };   
+            return hashtext.toString();
+
+        } catch(Exception e) {
+            LOGGER.log(Level.WARNING, "Falha ao gerar o hash MD5", e);
+        }
         return null;    
     } 
 
