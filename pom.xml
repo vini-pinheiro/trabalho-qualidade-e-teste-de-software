@@ -14,11 +14,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <surefire.version>2.22.2</surefire.version>
         <jacoco.version>0.8.11</jacoco.version>
-        <jacoco.check.classes>Controllers.comprar</jacoco.check.classes>
+        <jacoco.check.classes>Service.MontagemLancheService</jacoco.check.classes>
         <pitest.version>1.15.3</pitest.version>
         <pitest.junit5.version>1.2.1</pitest.junit5.version>
-        <pitest.targetClasses>Controllers.comprar</pitest.targetClasses>
+        <pitest.targetClasses>Service.MontagemLancheService</pitest.targetClasses>
         <pitest.targetTests>*Test</pitest.targetTests>
+        <pitest.mutators>DEFAULTS</pitest.mutators>
         <!-- Testes marcados com @Tag("defeito-conhecido") ficam fora da suíte padrão; ver perfil "defeitos" -->
         <grupos.incluidos></grupos.incluidos>
         <grupos.excluidos>defeito-conhecido</grupos.excluidos>
@@ -255,7 +256,7 @@
                         <param>defeito-conhecido</param>
                     </excludedGroups>
                     <mutators>
-                        <mutator>DEFAULTS</mutator>
+                        <mutator>${pitest.mutators}</mutator>
                     </mutators>
                     <outputFormats>
                         <outputFormat>HTML</outputFormat>

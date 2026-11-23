@@ -1,0 +1,1 @@
+Visto que a minha Issue com Lanche não possuia erros no sonarqube para corrigir, verifiquei nos issues totais do projeto e encontrei esta classe 'salvarLancheCliente' que possuia 5 issues.
