@@ -19,8 +19,8 @@ navegador ──> Cloudflare (DNS proxied + Access: login obrigatório)
 
 - **Quem entra:** qualquer e-mail `@id.uff.br` e os e-mails pessoais listados na política do Access
   (app `Code Burguer's (UFF) - privado`, política `UFF e equipe do Code Burguer's`).
-- **Como entra:** código de 6 dígitos enviado por e-mail (One-time PIN). O "Entrar com Google" entra
-  quando o provedor Google for cadastrado no Zero Trust (passo 3 abaixo).
+- **Como entra:** só "Entrar com Google", sem VPN e sem código por e-mail. O Access manda direto para a
+  tela de contas do Google; quem não está na política é recusado depois do login.
 - **Isolamento:** projeto Compose próprio (`codeburguer`), sem nada compartilhado com a stack da MAIA.
   O banco não tem porta publicada nem rota de saída, então as falhas conhecidas da aplicação
   (#22, #23) ficam restritas a este banco de demonstração.
@@ -55,16 +55,22 @@ No Cloudflare (conta da NIUTech, zona `maia-ai.com.br`):
 1. **DNS:** registro `A` `codeburguer` → `187.127.31.206`, com proxy ligado (nuvem laranja).
 2. **Zero Trust → Access → Applications → Add → Self-hosted:**
    - nome `Code Burguer's (UFF)`, domínio `codeburguer.maia-ai.com.br`, sessão de 24h;
-   - métodos de login: **Google** e **One-time PIN**;
+   - método de login: só **Google**, com "Aplicar autenticação instantânea" ligado;
    - política `Allow` com duas regras **Include**: `Emails ending in` `@id.uff.br` e `Emails` com a lista
      de exceções.
    Esse app é mais específico que o `*.maia-ai.com.br` da MAIA, então a política dele é a que vale.
-3. **Login com Google (feito pelo dono da conta Google Cloud):**
-   - no Google Cloud Console, criar um *OAuth client ID* do tipo *Web application* com a origem
-     `https://wild-truth-50df.cloudflareaccess.com` e o redirect
+3. **Login com Google** (já feito):
+   - Google Cloud, projeto **MAIA** (`maia-512601`) → Google Auth Platform: app `MAIA`, público
+     **Externo**, **em produção**, só os escopos `openid email profile` (não exige verificação);
+     domínios autorizados `maia-ai.com.br` e `cloudflareaccess.com`; página inicial
+     `https://maia-ai.com.br` e privacidade `https://maia-ai.com.br/privacy`;
+   - OAuth client `Cloudflare Access - Code Burguer's` (*Web application*), origem
+     `https://wild-truth-50df.cloudflareaccess.com` e redirect
      `https://wild-truth-50df.cloudflareaccess.com/cdn-cgi/access/callback`;
-   - em Zero Trust → Settings → Authentication → Add new → Google, colar o Client ID e o Client secret;
-   - marcar o Google como método de login no app acima.
+   - Zero Trust → Integrações → Provedores de identidade → **Google**, com o Client ID e o Client
+     secret desse client. O segredo não fica em nenhum arquivo do repositório nem da VPS.
+   - Para trocar o segredo: gerar um novo no client do Google Cloud e atualizar o provedor Google no
+     Zero Trust.
 
 ## Atualizar para a versão mais nova do `master`
 
