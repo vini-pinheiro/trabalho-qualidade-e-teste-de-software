@@ -65,9 +65,7 @@ public class alterarIngrediente extends HttpServlet {
         ValidadorCookie validar = (validadorCookie != null) ? validadorCookie : new ValidadorCookie();
         
         resultado = validar.validarFuncionario(cookies);
-        } catch (java.lang.NullPointerException e) {
-            // Requisições sem cookies são tratadas como não autorizadas.
-        }
+        }catch(java.lang.NullPointerException e){}
         //////////////
         
         if ((br != null) && resultado) {

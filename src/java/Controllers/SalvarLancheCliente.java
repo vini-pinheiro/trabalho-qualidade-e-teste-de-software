@@ -35,8 +35,8 @@ public class SalvarLancheCliente extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(SalvarLancheCliente.class.getName());
 
     private final ValidadorCookie validadorCookie;
-    private final DaoLanche lancheDaoInjetado;
-    private final DaoIngrediente ingredienteDaoInjetado;
+    private final DaoLanche lancheDao;
+    private final DaoIngrediente ingredienteDao;
 
     public SalvarLancheCliente() {
         this(new ValidadorCookie(), new DaoLanche(), new DaoIngrediente());
@@ -45,8 +45,8 @@ public class SalvarLancheCliente extends HttpServlet {
     // Usado nos testes para isolar cookie e banco
     public SalvarLancheCliente(ValidadorCookie validadorCookie, DaoLanche lancheDao, DaoIngrediente ingredienteDao) {
         this.validadorCookie = validadorCookie;
-        this.lancheDaoInjetado = lancheDao;
-        this.ingredienteDaoInjetado = ingredienteDao;
+        this.lancheDao = lancheDao;
+        this.ingredienteDao = ingredienteDao;
     }
 
     /**
@@ -63,77 +63,92 @@ public class SalvarLancheCliente extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
-        String json = "";
-        
-        ////////Validar Cookie
-        boolean resultado = false;
-        
+        BufferedReader leitor = new BufferedReader(new InputStreamReader(request.getInputStream()));
+
+        if (sessaoClienteValida(request)) {
+            JSONObject dados = lerPayloadJson(leitor);
+            Lanche lancheSalvo = montarESalvarLanche(dados);
+            enviarResposta(response, montarUrlCarrinho(lancheSalvo));
+        } else {
+            enviarResposta(response, "erro");
+        }
+    }
+
+    private boolean sessaoClienteValida(HttpServletRequest request) {
         try {
             Cookie[] cookies = request.getCookies();
-            resultado = validadorCookie.validar(cookies);
+            return this.validadorCookie.validar(cookies);
         } catch (NullPointerException e) {
-            LOGGER.log(Level.WARNING, "Cookies ausentes; a requisi\u00e7\u00e3o ser\u00e1 recusada", e);
+            LOGGER.log(Level.WARNING, "Cookies ausentes; a requisição será recusada", e);
+            return false;
         }
-        //////////////
-        
-        if ((br != null) && resultado) {
-            json = br.readLine();
-            byte[] bytes = json.getBytes(ISO_8859_1); 
-            String jsonStr = new String(bytes, UTF_8);            
-            JSONObject dados = new JSONObject(jsonStr);
-            JSONObject ingredientes = dados.getJSONObject("ingredientes");
-            
-            double precoDoLanche = 0.00;
-            
-            Lanche lanche = new Lanche();
-            
-            lanche.setNome(dados.getString("nome"));
-            lanche.setDescricao(dados.getString("descricao"));
-            
-            
-            DaoLanche lancheDao = (lancheDaoInjetado != null) ? lancheDaoInjetado : new DaoLanche();
-            DaoIngrediente ingredienteDao = (ingredienteDaoInjetado != null) ? ingredienteDaoInjetado : new DaoIngrediente();
-            
-            Iterator<String> keys = ingredientes.keys();
-            
-            while(keys.hasNext()) {
-                
-                String key = keys.next(); 
-                Ingrediente ingredienteLanche = new Ingrediente();
-                ingredienteLanche.setNome(key);
-                
-                Ingrediente ingredienteComID = ingredienteDao.pesquisaPorNome(ingredienteLanche);
-                precoDoLanche += ingredienteComID.getValor_venda() * Double.valueOf(ingredientes.getInt(key));
-            }
-            
-            
-            lanche.setValor_venda(precoDoLanche);
-            lancheDao.salvarCliente(lanche);
-            
-            Lanche lancheComID = lancheDao.pesquisaPorNome(lanche);
-            
-            while(keys.hasNext()) {
-                
-                String key = keys.next(); 
-                Ingrediente ingredienteLanche = new Ingrediente();
-                ingredienteLanche.setNome(key);
-                
-                Ingrediente ingredienteComID = ingredienteDao.pesquisaPorNome(ingredienteLanche);
-                ingredienteComID.setQuantidade(ingredientes.getInt(key));
-                lancheDao.vincularIngrediente(lancheComID, ingredienteComID);
-            }
-            
-            try (PrintWriter out = response.getWriter()) {
-            out.println("../carrinho/carrinho.html?nome="+lancheComID.getNome()+"&preco="+lancheComID.getValor_venda());
-            }
-        } else {
-            try (PrintWriter out = response.getWriter()) {
-            out.println("erro");
+    }
+
+    private JSONObject lerPayloadJson(BufferedReader leitor) throws IOException {
+        String linhaJson = leitor.readLine();
+        String jsonUtf8 = new String(linhaJson.getBytes(ISO_8859_1), UTF_8);
+        return new JSONObject(jsonUtf8);
+    }
+
+    private Lanche montarESalvarLanche(JSONObject dados) {
+        JSONObject ingredientes = dados.getJSONObject("ingredientes");
+        Lanche lanche = new Lanche();
+        lanche.setNome(dados.getString("nome"));
+        lanche.setDescricao(dados.getString("descricao"));
+
+        Iterator<String> nomesIngredientes = ingredientes.keys();
+        double precoTotal = calcularPrecoLanche(ingredientes, nomesIngredientes);
+
+        lanche.setValor_venda(precoTotal);
+        this.lancheDao.salvarCliente(lanche);
+
+        Lanche lancheComId = this.lancheDao.pesquisaPorNome(lanche);
+        vincularIngredientes(lancheComId, ingredientes, nomesIngredientes);
+        return lancheComId;
+    }
+
+    private double calcularPrecoLanche(JSONObject ingredientes, Iterator<String> nomesIngredientes) {
+        double precoTotal = 0.0;
+        while (nomesIngredientes.hasNext()) {
+            String nomeIngrediente = nomesIngredientes.next();
+            Ingrediente ingrediente = buscarIngredientePorNome(nomeIngrediente);
+            precoTotal += ingrediente.getValor_venda() * ingredientes.getInt(nomeIngrediente);
         }
+        return precoTotal;
+    }
+
+    private void vincularIngredientes(Lanche lancheComId, JSONObject ingredientes,
+            Iterator<String> nomesIngredientes) {
+        while (nomesIngredientes.hasNext()) {
+            String nomeIngrediente = nomesIngredientes.next();
+            Ingrediente ingrediente = buscarIngredientePorNome(nomeIngrediente);
+            ingrediente.setQuantidade(ingredientes.getInt(nomeIngrediente));
+            this.lancheDao.vincularIngrediente(lancheComId, ingrediente);
         }
-        
-        
+    }
+
+    private Ingrediente buscarIngredientePorNome(String nome) {
+        Ingrediente filtro = new Ingrediente();
+        filtro.setNome(nome);
+        return this.ingredienteDao.pesquisaPorNome(filtro);
+    }
+
+    private String montarUrlCarrinho(Lanche lanche) {
+        return "../carrinho/carrinho.html?nome=" + lanche.getNome() + "&preco=" + lanche.getValor_venda();
+    }
+
+    private void enviarResposta(HttpServletResponse response, String conteudo) throws IOException {
+        try (PrintWriter out = response.getWriter()) {
+            out.println(conteudo);
+        }
+    }
+
+    private void executarRequisicao(HttpServletRequest request, HttpServletResponse response, String mensagemErro) {
+        try {
+            processRequest(request, response);
+        } catch (ServletException | IOException e) {
+            LOGGER.log(Level.SEVERE, mensagemErro, e);
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -142,16 +157,10 @@ public class SalvarLancheCliente extends HttpServlet {
      *
      * @param request servlet request
      * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            processRequest(request, response);
-        } catch (ServletException | IOException e) {
-            LOGGER.log(Level.SEVERE, "Erro ao processar requisi\u00e7\u00e3o GET", e);
-        }
+        executarRequisicao(request, response, "Erro ao processar requisição GET");
     }
 
     /**
@@ -159,16 +168,10 @@ public class SalvarLancheCliente extends HttpServlet {
      *
      * @param request servlet request
      * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            processRequest(request, response);
-        } catch (ServletException | IOException e) {
-            LOGGER.log(Level.SEVERE, "Erro ao processar requisi\u00e7\u00e3o POST", e);
-        }
+        executarRequisicao(request, response, "Erro ao processar requisição POST");
     }
 
     /**

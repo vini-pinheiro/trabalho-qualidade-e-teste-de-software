@@ -55,9 +55,7 @@ public class salvarLanche extends HttpServlet {
         ValidadorCookie validar = new ValidadorCookie();
         
         resultado = validar.validarFuncionario(cookies);
-        } catch (java.lang.NullPointerException e) {
-            // Requisições sem cookies são tratadas como não autorizadas.
-        }
+        }catch(java.lang.NullPointerException e){}
         //////////////
         
         if ((br != null) && resultado) {

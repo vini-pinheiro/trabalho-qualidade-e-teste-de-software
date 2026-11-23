@@ -6,6 +6,7 @@ import Helpers.ValidadorCookie;
 import Model.Ingrediente;
 import Model.Lanche;
 import apoio.CorpoRequisicao;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -208,5 +210,55 @@ class SalvarLancheClienteTest {
                 + " \"ingredientes\": {\"Pao com Gergelim\": 1, \"Bacon Crocante\": -1}}");
 
         assertEquals(2.50 - 4.00, lancheEnviadoAoDao().getValor_venda(), 0.001);
+    }
+
+    @Test
+    @DisplayName("Requisição GET é delegada ao processamento principal")
+    void deveDelegarDoGetParaProcessRequest() throws Exception {
+        when(request.getInputStream()).thenReturn(CorpoRequisicao.de(LANCHE_DA_CASA));
+
+        controller.doGet(request, response);
+
+        assertEquals("../carrinho/carrinho.html?nome=Lanche da Bia&preco=18.5", resposta.toString().trim());
+        verify(lancheDao).salvarCliente(any(Lanche.class));
+    }
+
+    @Test
+    @DisplayName("Requisição POST é delegada ao processamento principal")
+    void deveDelegarDoPostParaProcessRequest() throws Exception {
+        when(request.getInputStream()).thenReturn(CorpoRequisicao.de(LANCHE_DA_CASA));
+
+        controller.doPost(request, response);
+
+        assertEquals("../carrinho/carrinho.html?nome=Lanche da Bia&preco=18.5", resposta.toString().trim());
+        verify(lancheDao).salvarCliente(any(Lanche.class));
+    }
+
+    @Test
+    @DisplayName("Exceção de I/O no doPost é capturada e registrada sem propagar falha")
+    void deveCapturarIOExceptionNoDoPost() throws Exception {
+        when(request.getInputStream()).thenThrow(new IOException("falha de leitura"));
+
+        assertDoesNotThrow(() -> controller.doPost(request, response));
+
+        verify(lancheDao, never()).salvarCliente(any());
+    }
+
+    @Test
+    @DisplayName("Descrição do servlet retorna o texto padrão")
+    void deveRetornarDescricaoDoServlet() {
+        assertEquals("Short description", controller.getServletInfo());
+    }
+
+    @Test
+    @DisplayName("Erro ao acessar cookies da requisição é tratado como acesso recusado")
+    void deveRecusarMontagemQuandoGetCookiesLancaNullPointerException() throws Exception {
+        when(request.getCookies()).thenThrow(new NullPointerException());
+        when(request.getInputStream()).thenReturn(CorpoRequisicao.de(LANCHE_DA_CASA));
+
+        controller.processRequest(request, response);
+
+        assertEquals("erro", resposta.toString().trim());
+        verify(lancheDao, never()).salvarCliente(any());
     }
 }
