@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -225,6 +226,35 @@ class DaoIngredienteTest {
         conferirCheddar(dao.pesquisaPorNome(cheddar()));
         verify(resultado).close();
         verify(comando).close();
+    }
+
+    @Test
+    @DisplayName("pesquisaPorNome envia o nome como parâmetro, sem montar o SQL por concatenação")
+    void devePesquisarPorNomeComParametro() throws SQLException {
+        bancoRespondeLinhaDoCheddar();
+        Ingrediente comApostrofo = cheddar();
+        comApostrofo.setNome("Pão d'água");
+
+        dao.pesquisaPorNome(comApostrofo);
+
+        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        verify(conexao).prepareStatement(sql.capture());
+        assertTrue(sql.getValue().endsWith("nm_ingrediente = ?"));
+        assertFalse(sql.getValue().contains("Pão d'água"));
+        verify(comando).setString(1, "Pão d'água");
+    }
+
+    @Test
+    @DisplayName("listarTodos nomeia as colunas em vez de usar SELECT * e filtra os ativos")
+    void naoDeveUsarSelectAsterisco() throws SQLException {
+        bancoRespondeLinhaDoCheddar();
+
+        dao.listarTodos();
+
+        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        verify(conexao).prepareStatement(sql.capture());
+        assertFalse(sql.getValue().contains("*"));
+        assertTrue(sql.getValue().contains("fg_ativo = 1"));
     }
 
     @Test
