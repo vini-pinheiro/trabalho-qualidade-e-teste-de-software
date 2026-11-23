@@ -16,7 +16,7 @@ import java.sql.Statement;
  * @author kener_000
  */
 public class DaoLanche {
-    private Connection conecta;
+    private final Connection conecta;
 
     public DaoLanche() {
         this.conecta = new DaoUtil().conecta();
@@ -29,7 +29,6 @@ public class DaoLanche {
     public DaoLanche(Connection conecta) {
         this.conecta = conecta;
     }
-
 
     public void salvar(Lanche lanche) {
         salvar(lanche, 1);
@@ -45,8 +44,7 @@ public class DaoLanche {
 
         validarLanche(lanche);
 
-        try (PreparedStatement stmt = conecta.prepareStatement(
-                sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = conecta.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, lanche.getNome());
             stmt.setString(2, lanche.getDescricao());
@@ -68,26 +66,26 @@ public class DaoLanche {
         }
     }
 
-
-    public List<Lanche> listarTodos(){
+    public List<Lanche> listarTodos() {
         String sql = "SELECT * FROM tb_lanches WHERE fg_Ativo='1' ORDER BY id_lanche";
-        ResultSet rs;
-        List<Lanche> lanches = new ArrayList<Lanche>();
-        
-        try (PreparedStatement stmt = conecta.prepareStatement(sql)){
-            rs = stmt.executeQuery();
-            
-            while (rs.next()){
+
+        List<Lanche> lanches = new ArrayList<>();
+
+        try (PreparedStatement stmt = conecta.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
                 lanches.add(criarLanche(rs, 1));
             }
-            rs.close();
+
             return lanches;
-        } catch(SQLException e){
-             throw new RuntimeException(e);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        
     }
-    
+
+
     public Lanche pesquisaPorNome(Lanche lanche){
         if (lanche == null) {
             throw new IllegalArgumentException("O lanche não pode ser nulo");
