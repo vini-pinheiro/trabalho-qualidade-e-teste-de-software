@@ -3,6 +3,7 @@
 -- ENCODING = 'UTF-8'
 -- TEMPLATE template0
 
+-- Get-Content docs/util/insertions.sql -Encoding UTF8 | docker-compose exec -T db psql -U postgres -d lanchonete
 ---------------------------------------------
 
 CREATE TABLE tb_status_lanchonete (

@@ -173,7 +173,7 @@ class DaoLancheTest {
         Lanche searchFilter = new Lanche();
         searchFilter.setNome("X-Egg");
 
-        when(connectionMock.prepareStatement(contains("X-Egg"))).thenReturn(preparedStatementMock);
+        when(connectionMock.prepareStatement(anyString())).thenReturn(preparedStatementMock);
         when(preparedStatementMock.executeQuery()).thenReturn(resultSetMock);
 
         when(resultSetMock.next()).thenReturn(true, false);
@@ -191,6 +191,7 @@ class DaoLancheTest {
         assertEquals(17.00, result.getValor_venda());
         assertEquals(1, result.getFg_ativo());
 
+        verify(preparedStatementMock).setString(1, "X-Egg");
         verify(resultSetMock).close();
         verify(preparedStatementMock).close();
     }
@@ -214,7 +215,7 @@ class DaoLancheTest {
     void shouldFindLancheByStringName() throws SQLException {
         String sandwichName = "X-Frango";
 
-        when(connectionMock.prepareStatement(contains("X-Frango"))).thenReturn(preparedStatementMock);
+        when(connectionMock.prepareStatement(anyString())).thenReturn(preparedStatementMock);
         when(preparedStatementMock.executeQuery()).thenReturn(resultSetMock);
 
         when(resultSetMock.next()).thenReturn(true, false);
@@ -231,6 +232,7 @@ class DaoLancheTest {
         assertEquals("Filé de frango desfiado", result.getDescricao());
         assertEquals(16.50, result.getValor_venda());
 
+        verify(preparedStatementMock).setString(1, "X-Frango");
         verify(resultSetMock).close();
         verify(preparedStatementMock).close();
     }
@@ -243,6 +245,36 @@ class DaoLancheTest {
         assertThrows(RuntimeException.class, () -> daoLanche.pesquisaPorNome("X-Tudo"));
     }
 
+    @Test
+    @DisplayName("Deve rejeitar lanche nulo")
+    void shouldRejectNullLanche() {
+        assertThrows(IllegalArgumentException.class, () -> daoLanche.salvar(null));
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar lanche com valor negativo")
+    void shouldRejectNegativeLancheValue() {
+        Lanche lanche = new Lanche();
+        lanche.setNome("X-Negativo");
+        lanche.setDescricao("Valor inválido");
+        lanche.setValor_venda(-1.0);
+
+        assertThrows(IllegalArgumentException.class, () -> daoLanche.salvar(lanche));
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar vínculo com quantidade inválida")
+    void shouldRejectInvalidIngredientQuantity() {
+        Lanche lanche = new Lanche();
+        lanche.setId_lanche(1);
+
+        Ingrediente ingrediente = new Ingrediente();
+        ingrediente.setId_ingrediente(3);
+        ingrediente.setQuantidade(0);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> daoLanche.vincularIngrediente(lanche, ingrediente));
+    }
 
     // ==========================================
     // Testes: vincularIngrediente
