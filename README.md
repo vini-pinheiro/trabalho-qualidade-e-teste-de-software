@@ -2,7 +2,11 @@
 
 ## Entrega 2 — vídeo
 
-[![Capa do vídeo da Entrega 2 — clique para assistir](docs/entrega-2/video/capa.png)](docs/entrega-2/video/code-burguers-entrega2.mp4)
+
+
+https://github.com/user-attachments/assets/fd245ec4-f55f-4f47-afab-cbc30894f64c
+
+
 
 Quatro minutos e quarenta e oito segundos do sistema se testando sozinho: o Selenium dirige o Chrome, o teste confere o banco de verdade a cada passo e o SonarQube mostra o código antes e depois. Uma parte por integrante, com legenda embutida e narração.
 
