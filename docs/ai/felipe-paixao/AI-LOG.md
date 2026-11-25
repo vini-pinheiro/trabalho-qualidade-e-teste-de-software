@@ -1,10 +1,12 @@
 # Registro de Uso de Inteligência Artificial (AI-LOG)
 
 **Aluno:** Felipe Paixão
-**Entrega:** Etapa 1 — ampliação da suíte de testes, documentação e apresentação
+**Entregas:** Etapa 1 — ampliação da suíte de testes, documentação e apresentação; Etapa 2 — Técnicas de Teste, Integração, Sistema e Inspeção
 **Módulo:** Gestão de Estoque e Insumos (`DAO.DaoIngrediente`, servlets de insumo), além do apoio à consolidação da entrega
 
 ---
+
+## Entrega 1
 
 | Responsável | Atividade | Ferramenta | Prompt / Instrução Utilizada | Resultado da IA | Decisão | Validação |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -17,6 +19,21 @@
 | Felipe Paixão | Investigação do defeito de montagem de lanche (issues #17 e #20) | Claude Code (Anthropic) | Pedi para confirmar ou descartar a suspeita de que `DaoLanche` não salvava os ingredientes. | Descartou a suspeita: o `INSERT` é executado. Localizou a causa real no servlet `salvarLancheCliente`, que reutiliza o mesmo `Iterator` em dois laços. | **Aceito** | Teste `deveVincularCadaIngredienteAoLanche` reproduz a falha (esperava 3 vínculos, recebeu 0), coerente com o resultado do CT-04 executado em 20/09. |
 | Felipe Paixão | Slides da apresentação e roteiro de falas | Claude Code (Anthropic) | Pedi 12 slides, dois por integrante, e um roteiro em formato teleprompter. | Gerou `gerar-apresentacao.js` e `gerar-roteiro.py`, que produzem o `.pptx` e o `.pdf`. O roteiro lê as falas das notas do apresentador para os dois não divergirem. | **Alterado** | Corrigimos a atribuição dos módulos por integrante e substituímos os cartões que ainda diziam "não executado" pelos resultados reais dos casos manuais. |
 | Felipe Paixão | Consolidação do relatório da entrega | Claude Code (Anthropic) | Pedi um relatório com comandos, ambiente, resultados, cobertura e defeitos, sem arredondar números. | Produziu `docs/entrega-1/README.md` a partir dos relatórios do Surefire e do JaCoCo. | **Aceito** | Números conferidos contra a saída real do Maven; os cinco defeitos vistos apenas nos testes manuais estão listados à parte, como ainda sem issue. |
+
+## Entrega 2
+
+Usei a IA para o trabalho repetitivo: rodar PIT, SonarQube e Docker, escrever os testes e montar as evidências.
+A escolha do que testar, o que aceitar e a conferência dos números foram minhas. Cada linha separa o que a IA fez
+do que eu fiz.
+
+| Responsável | Atividade | Ferramenta | Prompt / Instrução Utilizada | Resultado da IA | Decisão (Aceito / Alterado / Rejeitado) | Validação |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Felipe Paixão | Teste de mutação em `DAO.DaoIngrediente` (commit `26cf6e4`) | Claude Code (Anthropic) | Pedi para rodar o PIT no `DaoIngrediente`, explicar os mutantes sobreviventes e fortalecer as asserções sem mudar o código de produção. | Mostrou que os testes não conferiam a descrição, os parâmetros do `UPDATE` nem o fechamento de `ResultSet`/`PreparedStatement`. Fortaleceu as asserções e criou os cenários de lanche sem ingredientes e de listagem com várias linhas. | **Aceito** | PIT rodado de novo: de 35/55 (64%) para 55/55 (100%). `DaoIngrediente` incluído na verificação de 80% de arestas do JaCoCo. |
+| Felipe Paixão | Teste de inspeção com SonarQube (commit `aa31fad`) | Claude Code (Anthropic) | Pedi para corrigir os apontamentos do SonarQube no `DaoIngrediente` mantendo o comportamento público e sem renomear a classe. | Trocou a concatenação do nome no SQL por parâmetro (S2077), substituiu `SELECT *` por colunas nomeadas (S6905), extraiu `lerLinha`/`lerTodos` para tirar literais duplicados (S1192) e passou os recursos JDBC para try-with-resources. Criou testes para a consulta parametrizada. | **Aceito** | Nova análise no SonarQube (perfil Sonar way comprehensive): `DaoIngrediente` de 10 para 0 apontamentos, projeto de 364 para 354. Prints de antes e depois em [`docs/entrega-2/sonar/felipe-paixao`](../../entrega-2/sonar/felipe-paixao). Suíte padrão verde. |
+| Felipe Paixão | Teste de integração `DaoIngredienteIT` (commit `ebd3136`) | Claude Code (Anthropic) | Pedi um teste de integração do `DaoIngrediente` contra o PostgreSQL 13 real, em que cada teste limpasse o que criou. | Criou 8 cenários: salvar e pesquisar com todos os campos, nome com apóstrofo, tentativa de injeção de SQL, alterar, listar só ativos e em ordem, listar por lanche com a quantidade do vínculo, remover e a caracterização de que `tb_ingredientes` aceita valores negativos (#25). | **Aceito** | Rodei o perfil `integracao` no Docker. Cada teste usa prefixo próprio e o `@AfterEach` limpa o banco. |
+| Felipe Paixão | Teste de sistema com Selenium para o CT-05 (commit `a7fcb08`) | Claude Code (Anthropic) | Pedi para automatizar o meu caso manual CT-05 com Selenium e Page Objects. | Criou `LoginFuncionarioPage`, `PainelIngredientePage`, `EstoquePage` e a suíte `EstoqueE2E` com 4 cenários: cadastro de insumo conferido no estoque e no banco, baixa e remoção, bloqueio sem login e o defeito #25 (o painel aceita valores negativos). | **Aceito** | Executei a suíte no Docker (aplicação, Selenium e banco). O resultado bate com o CT-05 manual. Prints em [`docs/entrega-2/selenium/felipe-paixao`](../../entrega-2/selenium/felipe-paixao). |
+| Felipe Paixão | Publicação do sistema numa VPS para a apresentação (commit `bae1750`) | Claude Code (Anthropic) | Pedi para publicar a aplicação numa VPS sem expor o banco nem permitir que o login fosse contornado pelo IP. | Gerou o `compose.vps.yml` (banco só em rede interna), o vhost do nginx que aceita só IPs do Cloudflare, o script que gera essa lista e o script que troca a senha padrão `admin/admin`. | **Aceito** | Acessei a aplicação pelo domínio publicado e conferi que o acesso direto pelo IP é recusado. |
+| Felipe Paixão | Vídeo da Entrega 2 (commit `613b4f0`) | Claude Code (Anthropic) e Gemini (Google) para a narração | Pedi um vídeo curto com o Selenium rodando, os números de cada integrante e os prints do SonarQube, com legenda embutida e narração. | Gravou as suítes Selenium com um painel de passos, montou os cards e os prints com legenda e gerou a narração. Depois recodificou o mp4 de 18,9 MB para 9,4 MB para caber no limite do GitHub. | **Aceito** | Conferi os números de cada integrante nos relatórios e a legibilidade do texto da versão reduzida em quadros de 1:00, 2:45 e 4:30. |
 
 ---
 
