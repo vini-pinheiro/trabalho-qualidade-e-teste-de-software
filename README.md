@@ -8,6 +8,12 @@ https://github.com/user-attachments/assets/fd245ec4-f55f-4f47-afab-cbc30894f64c
 
 
 
+https://github.com/user-attachments/assets/b9d9449a-9fab-4050-8e30-cf0ac451a41d
+
+
+
+
+
 Quatro minutos e quarenta e oito segundos do sistema se testando sozinho: o Selenium dirige o Chrome, o teste confere o banco de verdade a cada passo e o SonarQube mostra o código antes e depois. Uma parte por integrante, com legenda embutida e narração.
 
 - [Assistir ao vídeo (.mp4)](docs/entrega-2/video/code-burguers-entrega2.mp4) — o GitHub abre o player na página do arquivo
