@@ -1,15 +1,15 @@
 # Publicação do Code Burguer's na VPS
 
-Endereço: **https://codeburguer.maia-ai.com.br**, protegido por login no Cloudflare Access.
+Endereço: **https://codeburguer.maia-ai.com.br**, aberto ao público (sem login) desde 25/11/2026.
 
 ## Como fica
 
 ```
-navegador ──> Cloudflare (DNS proxied + Access: login obrigatório)
-                 │  só passa quem fez login e está autorizado
+navegador ──> Cloudflare (DNS proxied + Access com política Bypass para todos)
+                 │  passa qualquer pessoa, sem login
                  ▼
           nginx do host, vhost codeburguer.conf
-                 │  aceita só IPs do Cloudflare e exige o cabeçalho do Access
+                 │  aceita só IPs do Cloudflare e recusa /tabela
                  ▼
           127.0.0.1:8895 ──> codeburguer-app (Tomcat 8.5, WAR deste repositório)
                                   │  rede interna, sem saída para a internet
@@ -17,13 +17,21 @@ navegador ──> Cloudflare (DNS proxied + Access: login obrigatório)
                             codeburguer-db (PostgreSQL 13, volume próprio)
 ```
 
-- **Quem entra:** qualquer e-mail `@id.uff.br` e os e-mails pessoais listados na política do Access
-  (app `Code Burguer's (UFF) - privado`, política `UFF e equipe do Code Burguer's`).
-- **Como entra:** só "Entrar com Google", sem VPN e sem código por e-mail. O Access manda direto para a
-  tela de contas do Google; quem não está na política é recusado depois do login.
+- **Quem entra:** qualquer pessoa. O app do Access `Code Burguer's (UFF)` continua existindo, mas com
+  uma política **Bypass** com Include `Everyone`. Ele precisa ficar: sem ele, vale o app
+  `*.maia-ai.com.br` da MAIA, que pede login. Para voltar a exigir login, trocar a política dele pela
+  `UFF e equipe do Code Burguer's` (Allow, `@id.uff.br` + e-mails da equipe, só Google) e repor no
+  vhost a checagem do cabeçalho `Cf-Access-Jwt-Assertion`.
+- **O que fica exposto:** as falhas conhecidas da aplicação, agora para qualquer um: SQL injection no
+  login (#23), pedido gravado em nome de outro cliente (#22) e `alterarStatusLanchonete` sem login
+  (qualquer um abre ou fecha a lanchonete). O `/tabela`, que lista os clientes com o hash da senha sem
+  login, é recusado no nginx.
 - **Isolamento:** projeto Compose próprio (`codeburguer`), sem nada compartilhado com a stack da MAIA.
-  O banco não tem porta publicada nem rota de saída, então as falhas conhecidas da aplicação
-  (#22, #23) ficam restritas a este banco de demonstração.
+  O banco não tem porta publicada nem rota de saída, então essas falhas ficam restritas a este banco
+  de demonstração.
+- **Dados de demonstração:** o `banco.sql` cria a lanchonete `FECHADO` e sem cardápio. Na VPS foram
+  carregados os dados de `docs/util/insertions.sql` e a lanchonete foi aberta (veja "Abrir a
+  lanchonete" abaixo).
 - **Senha do admin do painel:** o `banco.sql` cria `admin/admin`. Na instalação ela é trocada por
   uma senha aleatória, guardada em `~/codeburguer-admin.txt` (0600) no usuário de deploy da VPS.
 
@@ -57,7 +65,8 @@ No Cloudflare (zona `maia-ai.com.br`):
    - nome `Code Burguer's (UFF)`, domínio `codeburguer.maia-ai.com.br`, sessão de 24h;
    - método de login: só **Google**, com "Aplicar autenticação instantânea" ligado;
    - política `Allow` com duas regras **Include**: `Emails ending in` `@id.uff.br` e `Emails` com a lista
-     de exceções.
+     de exceções (era assim até 25/11/2026; hoje o app usa uma política `Bypass` com Include
+     `Everyone`, e o site é público).
    Esse app é mais específico que o `*.maia-ai.com.br` da MAIA, então a política dele é a que vale.
 3. **Login com Google** (já feito):
    - Google Cloud, projeto **MAIA** → Google Auth Platform: app `MAIA`, público
@@ -86,12 +95,34 @@ nem enviado de lá).
 
 O banco e os dados ficam no volume `codeburguer_db-data`; `--build app` recria só a aplicação.
 
+O vhost não é atualizado pelo `git switch`. Depois de mudar `deploy/nginx/codeburguer.conf`:
+
+```bash
+sudo install -m 0644 deploy/nginx/codeburguer.conf /etc/nginx/sites-available/codeburguer.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## Abrir a lanchonete e carregar o cardápio
+
+O `banco.sql` deixa a lanchonete `FECHADO` e sem lanches nem bebidas, então o cardápio avisa "A
+lanchonete está fechada no momento". Quem abre é o admin, no painel. Pela VPS, sem o painel:
+
+```bash
+# dados de demonstração (só num banco vazio: os ids 1, 2, 3 estão fixos no arquivo)
+docker exec -i codeburguer-db psql -U postgres -d lanchonete -1 -v ON_ERROR_STOP=1 -q < docs/util/insertions.sql
+
+# abrir a lanchonete, o mesmo que o botão do painel faz
+curl -s -X POST --data '{"status":"ABERTO"}' http://127.0.0.1:8895/alterarStatusLanchonete
+```
+
 ## Conferir
 
 ```bash
 docker compose -f deploy/compose.vps.yml ps
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8895/view/home/home.html   # 200 local
-curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' https://codeburguer.maia-ai.com.br  # 302 para o login do Access
+curl -s -o /dev/null -w '%{http_code}\n' https://codeburguer.maia-ai.com.br/view/menu/menu.html  # 200, sem login
+curl -s -o /dev/null -w '%{http_code}\n' https://codeburguer.maia-ai.com.br/tabela  # 403
+curl -s https://codeburguer.maia-ai.com.br/getStatusLanchonete  # {"status":"ABERTO"}
 ```
 
 ## Desfazer
