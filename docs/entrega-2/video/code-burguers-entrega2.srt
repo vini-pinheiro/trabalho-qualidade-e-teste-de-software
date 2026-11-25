@@ -1,0 +1,180 @@
+1
+00:00:00,240 --> 00:00:04,133
+Code Burguer's: Entrega 2 de Qualidade e Teste de Software.
+
+2
+00:00:04,213 --> 00:00:13,413
+Aqui o sistema se testa sozinho: o Selenium dirige o Chrome, o teste confere o
+banco a cada passo, e o SonarQube mostra o código antes e depois.
+
+3
+00:00:13,493 --> 00:00:18,613
+São cinco áreas, uma por integrante.
+
+4
+00:00:19,067 --> 00:00:22,427
+Agora é a parte do Yuri Mascarenhas: login e sessão.
+
+5
+00:00:22,853 --> 00:00:33,440
+O ValidadorCookie foi de onze para vinte e oito testes, por partição de equivalência:
+todas as vinte e duas arestas e setenta e três de setenta e quatro mutantes mortos.
+
+6
+00:00:34,160 --> 00:00:39,333
+No navegador, o login válido grava o token no banco e cria o cookie do cliente.
+
+7
+00:00:40,853 --> 00:00:45,760
+Senha errada não cria cookie, e o painel aberto sem login volta para o login de
+funcionário.
+
+8
+00:00:50,613 --> 00:00:55,120
+Depois do logout, o cookie antigo é reapresentado, e o sistema recusa.
+
+9
+00:00:57,173 --> 00:01:04,160
+E esse fica vermelho de propósito: o token do cliente, copiado para o cookie de
+funcionário, abre o painel de estoque.
+
+10
+00:01:04,240 --> 00:01:08,827
+Esse teste tinha saído do master; aqui ele rodou a partir do histórico e precisa
+voltar.
+
+11
+00:01:09,307 --> 00:01:13,307
+Agora é a parte do Vinicius Pinheiro: carrinho e fechamento do pedido.
+
+12
+00:01:13,760 --> 00:01:23,147
+Ele montou a base do grupo no pom: JaCoCo, PITest e Failsafe. No servlet comprar,
+cem por cento das arestas e trinta de trinta mutantes mortos.
+
+13
+00:01:23,760 --> 00:01:27,973
+O robô entra como cliente e coloca um lanche e uma bebida no carrinho.
+
+14
+00:01:32,693 --> 00:01:37,440
+O total confere: vinte e seis e cinquenta. Escolhe a forma de pagamento e finaliza.
+
+15
+00:01:37,520 --> 00:01:42,320
+Pedido salvo, e o teste confere no PostgreSQL o pedido e os itens.
+
+16
+00:01:42,400 --> 00:01:49,093
+Nos negativos, sem login o carrinho volta para o login, e sem cookie a compra é
+recusada sem criar pedido.
+
+17
+00:01:50,213 --> 00:01:59,253
+No SonarQube, o comprar tinha vinte e dois apontamentos. Sobraram dois, só de
+nome, e a complexidade do método principal caiu de vinte e um para dois.
+
+18
+00:01:59,680 --> 00:02:03,707
+Agora é a parte do Thiago Ferreira: cadastro e login do cliente.
+
+19
+00:02:04,160 --> 00:02:12,347
+Tabela de decisão no login, valor limite no campo ativo, quinze de dezesseis ramos
+e quarenta e oito de quarenta e nove mutantes mortos.
+
+20
+00:02:12,987 --> 00:02:20,027
+O robô cadastra uma cliente, faz login, e o carrinho mostra o nome dela. No banco,
+a senha está em MD5.
+
+21
+00:02:23,680 --> 00:02:31,360
+Os defeitos do teste manual continuam vermelhos pelo mesmo motivo: o usuário
+duplicado é aceito, o formulário vazio dá erro quinhentos,
+
+22
+00:02:31,360 --> 00:02:33,067
+e o acento corrompe o nome.
+
+23
+00:02:41,387 --> 00:02:48,640
+E o endereço do carrinho só aparece certo quando o id do cliente coincide com o
+do endereço. Nessa execução coincidiu.
+
+24
+00:02:49,253 --> 00:02:56,773
+No SonarQube, de trinta e três apontamentos para oito, e sumiram os dois bugs.
+Um deles imprimia o hash da senha no console.
+
+25
+00:02:57,200 --> 00:03:01,493
+Agora é a parte do Vinicius Fonseca: montagem do lanche personalizado.
+
+26
+00:03:01,947 --> 00:03:08,080
+A regra saiu do DaoLanche para o MontagemLancheService, e os requisitos foram
+escritos antes dos testes.
+
+27
+00:03:08,160 --> 00:03:16,773
+Lanche nulo, nome vazio, valor NaN, infinito, zero, ingrediente repetido: em todo
+caso inválido, o banco nem é chamado.
+
+28
+00:03:17,200 --> 00:03:23,867
+No SonarQube, ele escolheu o salvarLancheCliente, que tinha cinco apontamentos,
+e corrigiu: campo mutável,
+
+29
+00:03:23,867 --> 00:03:30,347
+exceções sem tratamento e um possível NullPointerException. E o PR dos testes
+passou no Quality Gate.
+
+30
+00:03:30,427 --> 00:03:38,720
+O lanche ainda é salvo sem os ingredientes, e o teste segue vermelho de propósito.
+Integração e Selenium desse módulo ficaram pendentes.
+
+31
+00:03:39,147 --> 00:03:42,373
+Agora é a parte do Felipe Paixão: insumos e estoque.
+
+32
+00:03:42,800 --> 00:03:51,573
+Com asserções mais rigorosas no DaoIngrediente, os mutantes mortos foram de
+trinta e cinco de cinquenta e cinco para vinte e nove de vinte e nove.
+
+33
+00:03:52,187 --> 00:03:57,493
+O robô cadastra um cheddar pelo painel, e o teste confere o insumo no banco e na
+tabela do estoque.
+
+34
+00:04:02,907 --> 00:04:07,360
+Depois dá baixa no bacon, de cinquenta para trinta e cinco, e remove.
+
+35
+00:04:12,533 --> 00:04:20,667
+Sem login, o estoque é bloqueado. E o defeito vinte e cinco continua: o painel
+aceita quantidade negativa, e o banco grava.
+
+36
+00:04:22,267 --> 00:04:30,773
+No SonarQube, os dez apontamentos do DaoIngrediente foram zerados, e a
+consulta passou a usar parâmetro: um nome com apóstrofo não quebra mais o SQL.
+
+37
+00:04:31,200 --> 00:04:38,693
+Fechando: duzentos e setenta e sete testes unitários passando, e oito vermelhos de
+propósito, um para cada defeito conhecido.
+
+38
+00:04:38,773 --> 00:04:44,427
+Mutação e cobertura altas dizem que os testes são fortes. Não dizem que o sistema
+não tem defeito.
+
+39
+00:04:44,507 --> 00:04:47,013
+Esse foi o Code Burguer's. Obrigado!
+

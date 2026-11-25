@@ -1,5 +1,26 @@
 # Trabalho da matéria de Qualidade e Teste de Software baseado no projeto APS-04-Lanchonete-Online-em-Java
 
+## Entrega 2 — vídeo
+
+[![Capa do vídeo da Entrega 2 — clique para assistir](docs/entrega-2/video/capa.png)](docs/entrega-2/video/code-burguers-entrega2.mp4)
+
+Quatro minutos e quarenta e oito segundos do sistema se testando sozinho: o Selenium dirige o Chrome, o teste confere o banco de verdade a cada passo e o SonarQube mostra o código antes e depois. Uma parte por integrante, com legenda embutida e narração.
+
+- [Assistir ao vídeo (.mp4)](docs/entrega-2/video/code-burguers-entrega2.mp4) — o GitHub abre o player na página do arquivo
+- [Legenda (.srt)](docs/entrega-2/video/code-burguers-entrega2.srt)
+- [Sobre o vídeo](docs/entrega-2/video/README.md) — capítulos completos, como foi gravado e o texto da narração
+
+### Capítulos
+
+| Início | Parte |
+|---|---|
+| 0:18 | Yuri Mascarenhas · Autenticação e sessão |
+| 1:09 | Vinicius Rocha Pinheiro · Carrinho e pedidos |
+| 1:59 | Thiago Ferreira · Cadastro de clientes |
+| 2:57 | Vinicius Fonseca de Freitas · Montagem de lanches |
+| 3:38 | Felipe Paixão · Insumos e estoque |
+| 4:31 | Fechamento |
+
 ## Entrega 1 — apresentação
 
 [![Capa da apresentação da Entrega 1](docs/entrega-1/apresentacao/preview/capa.png)](docs/entrega-1/apresentacao/apresentacao-entrega-1.pptx)
